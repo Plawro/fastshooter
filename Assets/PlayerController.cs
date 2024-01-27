@@ -32,9 +32,16 @@ public class PlayerController : MonoBehaviour
     float accumulatedRotation;
 
     public bool canMove = true;
+    Vector3 restPosition;
+    float bobSpeed = 5f;
+    float bobAmount = 0.08f;
+    float defaultCameraY;
+     
+    private float timer = Mathf.PI / 2;
 
     void Start()
     {
+        defaultCameraY = playerCamera.transform.position.y;
         walkSpeed = defWalkSpeed;
         runSpeed = defRunSpeed;
         characterController = GetComponent<CharacterController>();
@@ -53,9 +60,6 @@ public class PlayerController : MonoBehaviour
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-if(isRunning){
-    Debug.Log(runSpeed + "and" + walkSpeed);
-}
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
         {
             moveDirection.y = jumpPower;
@@ -101,19 +105,39 @@ if(isRunning){
 
 
 
-/* ROTACE PODLE RYCHLOSTI
+/* ROTATION BY SPEED
             rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rb.velocity.magnitude);
 */
 
-/* ROTACE PODLE STISKLEHO A / D
+/* ROTATION BY PRESSED A / D
 float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle;
         float smoothedZRotation = Mathf.Lerp(playerCamera.transform.localRotation.eulerAngles.z, targetZRotation, tiltSmoothing);
         playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle);
 */
 
+if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
+        {
+            timer += bobSpeed * Time.deltaTime;
 
+            Vector3 newPosition = new Vector3(Mathf.Cos(timer) * bobAmount,
+                restPosition.y + Mathf.Abs((Mathf.Sin(timer) * bobAmount)) + defaultCameraY, restPosition.z);
+            playerCamera.transform.localPosition = newPosition;
+        }
+
+
+        /* SETS CAMERA POSITION (when pressing move a few times in short time, makes a lagging effect)
+        else
+        {
+            timer = Mathf.PI / 2;
+        }
+        */
+
+        if (timer > Mathf.PI * 2)
+        {
+            timer = 0;    
+        }
 
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
             
