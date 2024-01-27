@@ -5,25 +5,38 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
+    [Header("Components")]
     public Camera playerCamera;
-    public float walkSpeed = 6f;
-    public float runSpeed = 12f;
-    public float jumpPower = 7f;
-    public float gravity = 10f;
+    public Rigidbody rb;
+    private CharacterController characterController;
+
+    [Header("User interface")]
     public float lookSpeed = 2f;
-    public float lookXLimit = 45f;
+
+    [Header("Movement settings")]
+    public float defWalkSpeed; //14
+    public float defRunSpeed; //7
+    public float jumpPower = 8f;
+    public float gravity = 25f;
+
+    [Header("Other settings")]
+    public float lookXLimit = 80f;
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
     public float crouchSpeed = 3f;
+    float walkSpeed;
+    float runSpeed;
 
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
-    private CharacterController characterController;
+    float accumulatedRotation;
 
-    private bool canMove = true;
+    public bool canMove = true;
 
     void Start()
     {
+        walkSpeed = defWalkSpeed;
+        runSpeed = defRunSpeed;
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -40,6 +53,9 @@ public class PlayerController : MonoBehaviour
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
+if(isRunning){
+    Debug.Log(runSpeed + "and" + walkSpeed);
+}
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
         {
             moveDirection.y = jumpPower;
@@ -54,7 +70,7 @@ public class PlayerController : MonoBehaviour
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
-        if (Input.GetKey(KeyCode.R) && canMove)
+        if (Input.GetKey(KeyCode.LeftControl) && canMove)
         {
             characterController.height = crouchHeight;
             walkSpeed = crouchSpeed;
@@ -64,18 +80,43 @@ public class PlayerController : MonoBehaviour
         else
         {
             characterController.height = defaultHeight;
-            walkSpeed = 6f;
-            runSpeed = 12f;
+            walkSpeed = defWalkSpeed;
+            runSpeed = defRunSpeed;
         }
 
         characterController.Move(moveDirection * Time.deltaTime);
 
         if (canMove)
         {
+            
+            float targetRotation = Input.GetAxis("Horizontal") * -400 * Time.deltaTime * lookSpeed; // -<number> changes horizontal value multiplication
+            accumulatedRotation = Mathf.Lerp(accumulatedRotation, targetRotation, 0.03f); // Smoothness
+
+
             rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+            float rotationZ = Mathf.Clamp(accumulatedRotation, -10, 10);
+            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
+
+
+
+
+/* ROTACE PODLE RYCHLOSTI
+            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
+            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rb.velocity.magnitude);
+*/
+
+/* ROTACE PODLE STISKLEHO A / D
+float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle;
+        float smoothedZRotation = Mathf.Lerp(playerCamera.transform.localRotation.eulerAngles.z, targetZRotation, tiltSmoothing);
+        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle);
+*/
+
+
+
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+            
         }
     }
 }
