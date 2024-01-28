@@ -32,8 +32,8 @@ public class PlayerController : MonoBehaviour
     private float curSpeedX;
     private float curSpeedY;
 
-    public float acceleration = 10f; // Adjust this for acceleration
-public float deceleration = 10f; // Adjust this for deceleration
+    float acceleration = 40f;
+    float deceleration = 60f;
 
 float maxSpeed = 20f;
 
@@ -43,17 +43,22 @@ float maxSpeed = 20f;
     float bobAmount = 0.08f;
     float defaultCameraY;
 
+    Vector3 newPosition;
+
     private float timer = Mathf.PI / 2;
 
     void Start()
     {
         defaultCameraY = 0.7f;
+        playerCamera.transform.localPosition = new Vector3(0, 0.7f, 0);
+
         walkSpeed = defWalkSpeed;
         runSpeed = defRunSpeed;
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
+    
 
     void Update()
     {
@@ -74,6 +79,7 @@ float maxSpeed = 20f;
 
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+
 
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
         {
@@ -116,6 +122,31 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
         playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle);
 */
 
+float smoothSpeed = 8.0f; // You can adjust this value to control the smoothness
+
+if (!characterController.isGrounded) {
+    // Smoothly interpolate the camera position
+    playerCamera.transform.localPosition = Vector3.Lerp(
+        playerCamera.transform.localPosition,
+        new Vector3(
+            playerCamera.transform.localPosition.x,
+            Mathf.Clamp(newPosition.y + rb.velocity.y / 10, 0.2f, 1.2f),
+            playerCamera.transform.localPosition.z
+        ),
+        smoothSpeed * Time.deltaTime * 3
+    );
+} else {
+    // Smoothly interpolate the camera position
+    playerCamera.transform.localPosition = Vector3.Lerp(
+        playerCamera.transform.localPosition,
+        new Vector3(
+            playerCamera.transform.localPosition.x,
+            newPosition.y,
+            playerCamera.transform.localPosition.z
+        ),
+        smoothSpeed * Time.deltaTime
+    );
+}
 
         if (canMove)
         {
@@ -131,7 +162,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
             {
                 timer += bobSpeed * Time.deltaTime;
 
-                Vector3 newPosition = new Vector3(Mathf.Cos(timer) * bobAmount,
+                newPosition = new Vector3(Mathf.Cos(timer) * bobAmount,
                     restPosition.y + Mathf.Abs((Mathf.Sin(timer) * bobAmount)) + defaultCameraY, restPosition.z);
                 playerCamera.transform.localPosition = newPosition;
             }
