@@ -1,6 +1,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -40,10 +41,10 @@ float maxSpeed = 20f;
     public bool canMove = true;
     Vector3 restPosition;
     float bobSpeed = 10f;
-    float bobAmount = 0.08f;
+    float bobAmount = 0.15f;
     float defaultCameraY;
 
-    Vector3 newPosition;
+    Vector3 newPosition = new Vector3(0,0.7f,0);
 
     private float timer = Mathf.PI / 2;
 
@@ -136,36 +137,62 @@ if (!characterController.isGrounded) {
         smoothSpeed * Time.deltaTime * 3
     );
 } else {
-    // Smoothly interpolate the camera position
-    playerCamera.transform.localPosition = Vector3.Lerp(
-        playerCamera.transform.localPosition,
-        new Vector3(
-            playerCamera.transform.localPosition.x,
-            newPosition.y,
-            playerCamera.transform.localPosition.z
-        ),
-        smoothSpeed * Time.deltaTime
-    );
+    // Gradually interpolate the camera position when grounded
+    newPosition.y = 0.7f + Mathf.Abs((Mathf.Sin(timer) * bobAmount));
+playerCamera.transform.localPosition = Vector3.Lerp(
+    playerCamera.transform.localPosition,
+    new Vector3(
+        playerCamera.transform.localPosition.x,
+        newPosition.y,
+        playerCamera.transform.localPosition.z
+    ),
+    smoothSpeed * Time.deltaTime
+);
 }
-
+Debug.Log(newPosition.y);
         if (canMove)
         {
+            
             float targetRotation = Input.GetAxis("Horizontal") * -100 * Time.deltaTime * lookSpeed; // -<number> changes horizontal value multiplication
             accumulatedRotation = Mathf.Lerp(accumulatedRotation, targetRotation, 0.08f); // Smoothness
-            float rotationZ = Mathf.Clamp(accumulatedRotation, -6, 6); // Maximum rotation
+            rotationZ = Mathf.Clamp(accumulatedRotation, -6, 6); // Maximum rotation
 
-            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
 
             if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0 && characterController.isGrounded)
+        {
+            if (!canStartBobbing)
             {
-                timer += bobSpeed * Time.deltaTime;
-
-                newPosition = new Vector3(Mathf.Cos(timer) * bobAmount,
-                    restPosition.y + Mathf.Abs((Mathf.Sin(timer) * bobAmount)) + defaultCameraY, restPosition.z);
-                playerCamera.transform.localPosition = newPosition;
+                initialCameraY = playerCamera.transform.localPosition.y;
+                canStartBobbing = true;
             }
+
+            timer += bobSpeed * Time.deltaTime;
+
+            newPosition = new Vector3(
+                Mathf.Cos(timer) * bobAmount,
+                initialCameraY + Mathf.Abs((Mathf.Sin(timer) * bobAmount)),
+                restPosition.z
+            );
+            playerCamera.transform.localPosition = Vector3.Lerp(
+                playerCamera.transform.localPosition,
+                newPosition,
+                smoothSpeed * Time.deltaTime
+            );
+        }
+        else
+        {
+            canStartBobbing = false;
+
+            playerCamera.transform.localPosition = Vector3.Lerp(
+                playerCamera.transform.localPosition,
+                new Vector3(
+                    playerCamera.transform.localPosition.x,
+                    newPosition.y ,
+                    playerCamera.transform.localPosition.z
+                ),
+                smoothSpeed * Time.deltaTime
+            );
+        }
 
              /* SETS CAMERA POSITION (when pressing move a few times in short time, makes a lagging effect)
         else
@@ -178,8 +205,16 @@ if (!characterController.isGrounded) {
             {
                 timer = 0;
             }
+            }
+            
+            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
+            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
 
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
-    }
+    
+    float rotationZ;
+    bool canStartBobbing;
+    float initialCameraY;
 }
