@@ -48,6 +48,10 @@ float maxSpeed = 20f;
 
     private float timer = Mathf.PI / 2;
 
+    float rotationZ;
+    bool canStartBobbing;
+    float initialCameraY;
+
     void Start()
     {
         defaultCameraY = 0.7f;
@@ -149,7 +153,6 @@ playerCamera.transform.localPosition = Vector3.Lerp(
     smoothSpeed * Time.deltaTime
 );
 }
-Debug.Log(newPosition.y);
         if (canMove)
         {
             
@@ -213,8 +216,5 @@ Debug.Log(newPosition.y);
 
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
-    
-    float rotationZ;
-    bool canStartBobbing;
-    float initialCameraY;
+
 }
