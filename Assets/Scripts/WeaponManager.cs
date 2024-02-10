@@ -11,7 +11,6 @@ public class WeaponManager : MonoBehaviour
     void Start()
     {
         weaponCount = weapons.Length;
-        Debug.Log("All w." + weaponCount);
 		SwitchWeapon(0);
     }
 
@@ -65,7 +64,6 @@ void SwitchWeapon(int num)
         currentWeapon = num;
     }
 
-    Debug.Log("Switched to weapon " + currentWeapon);
 
     for (int i = 0; i < weaponCount; i++)
     {
