@@ -1687,6 +1687,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1638998633}
     m_Modifications:
+    - target: {fileID: 201798259825055462, guid: ffa2514b94dc9da4c82fbd1d7e056eb5, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: d11e2ebcbd231fc468e47849cabbba19, type: 2}
     - target: {fileID: 3183960899645708838, guid: ffa2514b94dc9da4c82fbd1d7e056eb5, type: 3}
       propertyPath: m_Name
       value: TestGun (2)
