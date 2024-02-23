@@ -128,7 +128,6 @@ playerCamera.transform.localPosition = Vector3.Lerp(
     smoothSpeed * Time.deltaTime
 );
 }
-Debug.Log(newPosition.y);
         if (canMove)
         {
 
