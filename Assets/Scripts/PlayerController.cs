@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
 {
     //##1 Components and variables
     [Header("Components")]
-    public Camera playerCamera;
+    public GameObject playerCamera;
     public Rigidbody rb;
     private CharacterController characterController;
 
@@ -91,8 +91,9 @@ public class PlayerController : MonoBehaviour
         curSpeedX = Mathf.Clamp(curSpeedX, -maxSpeed, maxSpeed);
         curSpeedY = Mathf.Clamp(curSpeedY, -maxSpeed, maxSpeed);
         float movementDirectionY = moveDirection.y;
-        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
-
+        if(canMove){
+            moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+        }
 
         // Jump controller
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
@@ -125,7 +126,11 @@ public class PlayerController : MonoBehaviour
         }
 
         // Makes the character actually move
-        characterController.Move(moveDirection * Time.deltaTime);
+        if(canMove){
+            characterController.Move(moveDirection * Time.deltaTime);
+        }else{
+            characterController.Move(new Vector3(0, 0, 0));
+        }
 
 
 
@@ -134,9 +139,14 @@ public class PlayerController : MonoBehaviour
         // Camera rotation (and body rotation)
                     rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
             rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
+            if(canMove){
+                playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
+            }
 
+        if(canMove){
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
+        }
+            
 
 
 
