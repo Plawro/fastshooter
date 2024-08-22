@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Cinemachine;
 
 public class PlayerInteractions : MonoBehaviour
 {
     public PlayerController playerController;
+    public PowerPlantController powerPlantController;
     public Camera mainCamera;
     public float lookDistance = 5f;
 
@@ -14,6 +16,7 @@ public class PlayerInteractions : MonoBehaviour
 
     public LayerMask objectLayer;
     public LayerMask ignorePlayerLayer;
+    public Image crosshair;
 
     void Update()
     {
@@ -38,6 +41,11 @@ public class PlayerInteractions : MonoBehaviour
                     }
                     else
                     {
+                        if (hit.transform.name == "Screen1")
+                        {
+                            powerPlantController = hit.transform.parent.GetComponent<PowerPlantController>();
+                        }
+
                         SwitchToVirtualCamera(foundCamera);
                     }
                 }
@@ -45,11 +53,22 @@ public class PlayerInteractions : MonoBehaviour
         }
         else
         {
-            Debug.Log("No object detected in raycast");
+            // No objects detected
         }
+
+                if (isUsingVirtualCamera && powerPlantController != null)
+                {
+                    if (Input.GetKey(KeyCode.A))
+                    {
+                        powerPlantController.addPower(-1f);
+                    }
+                    else if (Input.GetKey(KeyCode.D))
+                    {
+                        powerPlantController.addPower(1f);
+                    }
+                }
     }
 
-private Vector3 camPosSave;
     void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
         //camPosSave = mainCamera.transform.position;
@@ -64,6 +83,9 @@ private Vector3 camPosSave;
 
         
             playerController.canMove = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            crosshair.enabled = false;
         
     }
 
@@ -79,6 +101,10 @@ private Vector3 camPosSave;
 
         
             playerController.canMove = true;
+             Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            crosshair.enabled = true;
         
+        powerPlantController = null;
     }
 }
