@@ -26,8 +26,8 @@ public class PlayerController : MonoBehaviour
     [Header("User settings")]
     // PRE-SET, DOESNT CHANGE INGAME
     // Movement
-    float defWalkSpeed = 5f;
-    float defRunSpeed = 12f;
+    float defWalkSpeed = 4f;
+    float defRunSpeed = 8f;
     float maxSpeed = 12f;
     float acceleration = 80f;
     float deceleration = 80f;
