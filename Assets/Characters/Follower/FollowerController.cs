@@ -136,30 +136,30 @@ public class FollowerController : MonoBehaviour
 
 
     void Predict()
-{
-    predictTimer += Time.deltaTime;
-
-    if (agent.velocity.sqrMagnitude > 0.1f) // Determine if enemy is actually moving (last position can take less seconds to get to)
     {
-        anim.SetInteger("walkMode", 3); // Running animation
-    }
-    else
-    {
-        anim.SetInteger("walkMode", 1); // Standing/idle animation
-    }
+        predictTimer += Time.deltaTime;
 
-    agent.speed = runSpeed;
-    agent.SetDestination(lastKnownPosition);
+        if (agent.velocity.sqrMagnitude > 0.1f) // Determine if enemy is actually moving (last position can take less seconds to get to)
+        {
+            anim.SetInteger("walkMode", 3); // Running animation
+        }
+        else
+        {
+            anim.SetInteger("walkMode", 1); // Standing/idle animation
+        }
 
-    if (predictTimer >= 4f) // Predict for 4 seconds
-    {
-        predictTimer = 0;
-        wasChasing = false;
-        Search();
+        agent.speed = runSpeed;
+        agent.SetDestination(lastKnownPosition);
+
+        if (predictTimer >= 4f) // Predict for 4 seconds
+        {
+            predictTimer = 0;
+            wasChasing = false;
+            Search();
+        }
+
+        Debug.Log("Predicting");
     }
-
-    Debug.Log("Predicting");
-}
 
 
     void Search()
