@@ -147,7 +147,11 @@ public class PlayerController : MonoBehaviour
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
             
+        
 
+        if(Input.GetKey(KeyCode.U) && RenderSettings.fogDensity >= 0.01){
+            RenderSettings.fogDensity -= Time.deltaTime /20;
+        }
 
 
 
