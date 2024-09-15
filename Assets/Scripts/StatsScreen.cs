@@ -7,20 +7,21 @@ using UnityEngine.UI;
 public class StatsScreen : MonoBehaviour
 {  
      public Image[] progressBarImages; // Array of 26 images representing the progress bar
-    public TextMeshProUGUI dataPackCountText; // Reference to TextMeshPro for data pack count display
-    public TextMeshProUGUI countdownText; // Reference to TextMeshPro for countdown display
-    public LockingDisplay squareScreenController; // Reference to SquareScreenController
+    public TextMeshProUGUI dataPackCountText;
+    public TextMeshProUGUI countdownText; // Antenna warning text
+    public LockingDisplay squareScreenController;
 
     private int dataPackCount = 0;
     private bool isTransferringData = false;
-    private bool isAntennaBroken = false; // New flag to check if antenna is broken
-    private Coroutine dataTransferCoroutine = null; // Reference to data transfer coroutine
-    private Coroutine countdownCoroutine = null; // Reference to countdown coroutine
+    private bool isAntennaBroken = false;
+    private Coroutine dataTransferCoroutine = null;
+    private Coroutine countdownCoroutine = null;
+    public AudioSource audioSource;
 
     private void Start()
     {
-        ResetProgressBar(); // Initialize the progress bar to empty
-        countdownText.gameObject.SetActive(false); // Hide countdown text initially
+        ResetProgressBar();
+        countdownText.gameObject.SetActive(false);
     }
 
     public void StartDataTransfer()
@@ -34,7 +35,7 @@ public class StatsScreen : MonoBehaviour
     private IEnumerator DataTransferProgress()
     {
         float progress = 0f;
-        float transferDuration = 60f; // Assume data transfer takes 5 seconds
+        float transferDuration = 60f; // Assume data transfer takes 60 seconds
         int numberOfImages = progressBarImages.Length;
 
         while (progress < 1f)
@@ -85,7 +86,7 @@ public class StatsScreen : MonoBehaviour
 
             yield return new WaitForSeconds(1f);
             countdown--;
-            countdownText.text = $"Antenna broken! Press 'P' to fix: {countdown}";
+            countdownText.text = $"[DEBUG: P] Antenna broken! Repair immedeately! Time till signal lose: {countdown}";
         }
 
         // Countdown expired, reset transfer and respawn target frequency
@@ -96,7 +97,7 @@ public class StatsScreen : MonoBehaviour
     {
         index = Mathf.Clamp(index, 0, progressBarImages.Length - 1);
 
-        // Activate all images up to the current index to create a filling effect
+        // Activate all images up to the current index to create a filling effect (should look good)
         for (int i = 0; i <= index; i++)
         {
             progressBarImages[i].gameObject.SetActive(true);
@@ -105,6 +106,10 @@ public class StatsScreen : MonoBehaviour
 
     private void CompleteDataTransfer()
     {
+        if (!audioSource.isPlaying)
+        {
+            audioSource.Play();
+        }
         isTransferringData = false;
         dataPackCount++;
         dataPackCountText.text = $"Data Packs Transferred: {dataPackCount}";

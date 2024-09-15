@@ -6,12 +6,17 @@ public class PowerPlantController : MonoBehaviour
 {
     public float minPower;
     public float maxPower;
-// -60 & 60
+    // -60 & 60
 
     public float addedPower;
     public float decreasedPower;
     public float power;
     public GameObject arrow;
+
+    public AudioClip sound1;
+    public AudioClip sound2;
+
+    public AudioSource audioSource;
 
     
     void Start()
@@ -19,7 +24,12 @@ public class PowerPlantController : MonoBehaviour
         
     }
 
-    // Update is called once per frame
+
+    public void AddPower(float amount)
+    {
+       power += amount;
+    }
+
     void Update()
     {
         power -= 0.002f;
@@ -31,21 +41,36 @@ public class PowerPlantController : MonoBehaviour
 
         
 
-        if(power < minPower){
-            //No energy for ya
+        if(power < minPower + 2){
+            if (!audioSource.isPlaying)
+            {
+                audioSource.clip = sound1;
+                audioSource.Play();
+            }
         }
 
-        if(power > maxPower){
-            //KABOOM
+        if(power > maxPower - 2){
+            if (!audioSource.isPlaying)
+            {
+                audioSource.clip = sound2;
+                audioSource.Play();
+            }
+
+            if(power >= 59.8f){
+                power = 180;
+            }
+            if(power >= 179){
+                power = 180;
+            }
         }
     }
 
     public void addPower(float ammount){
         if(ammount == 1){
-            power += 0.03f + Mathf.Clamp((power + 60) * 0.002f, 0, 0.2f);
+            power += 0.03f + Mathf.Clamp((power + 60) * 0.001f, 0, 0.2f);
             power = Mathf.Clamp(power, minPower, maxPower);
         }else if(ammount == -1){
-            power -= 0.05f + Mathf.Clamp((power + 60) * 0.005f, 0, 1f);
+            power -= 0.05f + Mathf.Clamp((power + 60) * 0.002f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);
         }
     }

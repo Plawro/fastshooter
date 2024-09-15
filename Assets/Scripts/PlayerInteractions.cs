@@ -16,25 +16,27 @@ public class PlayerInteractions : MonoBehaviour
 
     public LayerMask objectLayer;
     public LayerMask ignorePlayerLayer;
+    public LayerMask ignorePreInteractableLayer;
     public Image crosshair;
 
     void Update()
+{
+    Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+    RaycastHit hit;
+
+    int combinedMask = objectLayer.value | ~ignorePlayerLayer.value | ~ignorePreInteractableLayer.value;
+
+    if (Physics.Raycast(ray, out hit, lookDistance, combinedMask))
     {
-        Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-        RaycastHit hit;
-
-        int combinedMask = objectLayer.value | ~ignorePlayerLayer.value;
-
-        if (Physics.Raycast(ray, out hit, lookDistance, combinedMask))
+        if (hit.transform.CompareTag("Interactable"))
         {
-
+            crosshair.color = Color.blue; 
+            
             CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
-
+            Debug.DrawRay(ray.origin, ray.direction * lookDistance, Color.red);
             if (foundCamera != null)
             {
-
-                if (Input.GetKeyDown(KeyCode.E))
-                {
+                if(Input.GetKeyDown(KeyCode.E)){
                     if (isUsingVirtualCamera)
                     {
                         SwitchToMainCamera();
@@ -45,29 +47,49 @@ public class PlayerInteractions : MonoBehaviour
                         {
                             powerPlantController = hit.transform.parent.GetComponent<PowerPlantController>();
                         }
-
                         SwitchToVirtualCamera(foundCamera);
                     }
                 }
+                
+
+            }else if(hit.transform.name == "powerswitch"){
+                if(Input.GetKeyDown(KeyCode.E)){
+                    hit.transform.parent.transform.GetComponent<TowerController>().moveSpeed = hit.transform.parent.transform.GetComponent<TowerController>().fixSpeed;
+                    hit.transform.parent.transform.GetComponent<TowerController>().MoveAntennaToZero();
+                }
+            }else{ // Not screen or powerswitch, but door
+                if(Input.GetKeyDown(KeyCode.F)){
+                    hit.transform.parent.transform.GetComponent<DoorController>().StartCoroutine(hit.transform.parent.transform.GetComponent<DoorController>().OpenPartialDoor());;
+                }
+
+                if(Input.GetKeyDown(KeyCode.E)){
+                    hit.transform.parent.transform.GetComponent<DoorController>().ChangeDoorMode();
+                } 
             }
         }
         else
         {
-            // No objects detected
+            crosshair.color = Color.white;
         }
-
-                if (isUsingVirtualCamera && powerPlantController != null)
-                {
-                    if (Input.GetKey(KeyCode.A))
-                    {
-                        powerPlantController.addPower(-1f);
-                    }
-                    else if (Input.GetKey(KeyCode.D))
-                    {
-                        powerPlantController.addPower(1f);
-                    }
-                }
     }
+    else
+    {
+        crosshair.color = Color.white;
+    }
+
+    if (isUsingVirtualCamera && powerPlantController != null)
+    {
+        if (Input.GetKey(KeyCode.A))
+        {
+            powerPlantController.addPower(-1f);
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            powerPlantController.addPower(1f);
+        }
+    }
+}
+
 
     void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {

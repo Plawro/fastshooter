@@ -15,7 +15,9 @@ public class LockingDisplay : MonoBehaviour
     private bool isSearching = true;
     private Coroutine lockingCoroutine = null;
     private Coroutine searchBlinkCoroutine = null;
-    private float antennaBreakChance = 0.1f; // 10% chance of antenna breaking during data transfer
+    private float antennaBreakChance = 0.1f; // 10% chance of antenna breaking during data transfer (Will be replaced with automatical system later)
+
+    public AudioSource audioSource;
 
     private void Start()
     {
@@ -82,6 +84,10 @@ public class LockingDisplay : MonoBehaviour
                 lockingCoroutine = null;
                 yield break;
             }
+            if (!audioSource.isPlaying)
+            {
+                audioSource.Play();
+            }
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -92,7 +98,7 @@ public class LockingDisplay : MonoBehaviour
         statusText.text = "Locked";
         StopSearchingAnimation(); // Stop the blinking animation
 
-        // Random chance to break antenna
+        // Random chance to break antenna (will be replaced soon)
         if (Random.value < antennaBreakChance)
         {
             rectangularScreenController.BreakAntenna();

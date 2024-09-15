@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - Enemy
+  - Interactable
+  - PreInteractable
   layers:
   - Default
   - TransparentFX
@@ -21,11 +23,11 @@ TagManager:
   - Ground
   - 
   - Screen
+  - Door
   - 
   - 
-  - 
-  - 
-  - 
+  - Volume
+  - IgnoreRaycast
   - 
   - 
   - 

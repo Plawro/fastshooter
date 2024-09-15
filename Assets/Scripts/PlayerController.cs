@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
     public GameObject playerCamera;
     public Rigidbody rb;
     private CharacterController characterController;
+    public AudioSource footstepAudioSource;
+    public AudioClip footstepSound;
 
 
     [Header("User settings")]
@@ -34,13 +36,14 @@ public class PlayerController : MonoBehaviour
     float jumpPower = 8f;
     public float gravity = 25f;
     private Vector3 moveDirection = Vector3.zero;
+    private Vector3 initialCameraPosition;
 
     // Camera & body
     float lookXLimit = 80f;
     private float rotationX = 0;
     float defaultHeight = 2f;
     float crouchHeight = 1f;
-    float crouchSpeed = 3f;
+    float crouchSpeed = 2f;
 
     // TEMP VARS
     float walkSpeed;
@@ -53,12 +56,13 @@ public class PlayerController : MonoBehaviour
     float bobSpeed = 10f;
     float defaultCameraY;
     Vector3 newPosition = new Vector3(0,0.7f,0);
+    private bool playAtLowPoint = true;
+    private float lastFootstepTime = 0f;
 
     private float timer = Mathf.PI / 2;
 
     float rotationZ;
     bool canStartBobbing;
-    float initialCameraY;
 
     // SETTINGS
     public float lookSpeed = 2f;
@@ -73,10 +77,12 @@ public class PlayerController : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        initialCameraPosition = playerCamera.transform.localPosition;
     }
     
     void Update()
-    { //##2 Movement
+    { 
+        //##2 Movement
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
 
@@ -84,15 +90,26 @@ public class PlayerController : MonoBehaviour
         bool isRunning = Input.GetKey(KeyCode.LeftShift); // Next 2 lines slowly match running speed
         float targetSpeedX = (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Vertical");
         float targetSpeedY = (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Horizontal");
-        
+
         // Main movement control
         curSpeedX = Mathf.MoveTowards(curSpeedX, targetSpeedX, (isRunning ? acceleration : deceleration) * Time.deltaTime);
         curSpeedY = Mathf.MoveTowards(curSpeedY, targetSpeedY, (isRunning ? acceleration : deceleration) * Time.deltaTime);
         curSpeedX = Mathf.Clamp(curSpeedX, -maxSpeed, maxSpeed);
         curSpeedY = Mathf.Clamp(curSpeedY, -maxSpeed, maxSpeed);
+
         float movementDirectionY = moveDirection.y;
-        if(canMove){
+
+        if (canMove)
+        {
+            // Calculate the movement direction
             moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+
+            // Normalize the movement vector to avoid diagonal speed boosting
+            if (moveDirection.magnitude > 1f)
+            {
+                moveDirection.Normalize();
+                moveDirection *= isRunning ? runSpeed : walkSpeed; // Apply the correct speed after normalization
+            }
         }
 
         // Jump controller
@@ -117,8 +134,7 @@ public class PlayerController : MonoBehaviour
             characterController.height = crouchHeight;
             walkSpeed = crouchSpeed; // Sets new walk & run speeds for crouch mode
             runSpeed = crouchSpeed; // How we deal with running in crouch mode :D, DONT REDUCE STAMINA (if there is any soon)
-        }
-        else
+        }else
         {
             characterController.height = defaultHeight; // Reduce to default
             walkSpeed = defWalkSpeed;
@@ -126,24 +142,23 @@ public class PlayerController : MonoBehaviour
         }
 
         // Makes the character actually move
-        if(canMove){
+        if (canMove)
+        {
             characterController.Move(moveDirection * Time.deltaTime);
-        }else{
-            characterController.Move(new Vector3(0, 0, 0));
         }
-
+        else
+        {
+            characterController.Move(Vector3.zero);
+        }
 
 
 
         //##3 Camera
         // Camera rotation (and body rotation)
-                    rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            if(canMove){
-                playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
-            }
-
-        if(canMove){
+        rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
+        rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+        if(canMove && !PauseMenu.isPaused){
+            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
             
@@ -176,80 +191,112 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
 
 
 
-// Camera movement by jump / mid air velocity
-float smoothSpeed = 8.0f;
-if (!characterController.isGrounded) {
-    playerCamera.transform.localPosition = Vector3.Lerp(
-        playerCamera.transform.localPosition,
-        new Vector3(
-            playerCamera.transform.localPosition.x,
-            Mathf.Clamp(newPosition.y + rb.velocity.y / 10, 0.2f, 1.2f),
-            playerCamera.transform.localPosition.z
-        ),
-        smoothSpeed * Time.deltaTime * 3
-    );
-} else { // Move the camera back when on ground
-    newPosition.y = 0.7f + Mathf.Abs((Mathf.Sin(timer) * bobAmount));
-playerCamera.transform.localPosition = Vector3.Lerp(
-    playerCamera.transform.localPosition,
-    new Vector3(
-        playerCamera.transform.localPosition.x,
-        newPosition.y,
-        playerCamera.transform.localPosition.z
-    ),
-    smoothSpeed * Time.deltaTime
-);
-}
-
-
-
-
-        // Main camera bobbing controller (movement based)
-        if (canMove)
-        {
-            float targetRotation = Input.GetAxis("Horizontal") * -100 * Time.deltaTime * lookSpeed; // -<number> changes horizontal value multiplication
-            accumulatedRotation = Mathf.Lerp(accumulatedRotation, targetRotation, 0.08f); // Smoothness
-            rotationZ = Mathf.Clamp(accumulatedRotation, -6, 6); // Maximum rotation
-            if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0 && characterController.isGrounded)
-        {
-            if (!canStartBobbing)
-            {
-                initialCameraY = playerCamera.transform.localPosition.y;
-                canStartBobbing = true;
-            }
-            timer += bobSpeed * Time.deltaTime;
-            newPosition = new Vector3(
-                Mathf.Cos(timer) * bobAmount,
-                initialCameraY + Mathf.Abs((Mathf.Sin(timer) * bobAmount)),
-                restPosition.z
-            );
-            playerCamera.transform.localPosition = Vector3.Lerp(
-                playerCamera.transform.localPosition,
-                newPosition,
-                smoothSpeed * Time.deltaTime
-            );
-        }
-        else
-        {
-            canStartBobbing = false;
+        // Camera movement by jump / mid air velocity
+        float smoothSpeed = 8.0f;
+        if (!characterController.isGrounded) {
             playerCamera.transform.localPosition = Vector3.Lerp(
                 playerCamera.transform.localPosition,
                 new Vector3(
                     playerCamera.transform.localPosition.x,
-                    newPosition.y ,
+                    Mathf.Clamp(newPosition.y + rb.velocity.y / 10, 0.2f, 1.2f),
+                    playerCamera.transform.localPosition.z
+                ),
+                smoothSpeed * Time.deltaTime * 3
+            );
+        } else { // Move the camera back when on ground
+            newPosition.y = 0.7f + Mathf.Abs((Mathf.Sin(timer) * bobAmount));
+            playerCamera.transform.localPosition = Vector3.Lerp(
+                playerCamera.transform.localPosition,
+                new Vector3(
+                    playerCamera.transform.localPosition.x,
+                    newPosition.y,
                     playerCamera.transform.localPosition.z
                 ),
                 smoothSpeed * Time.deltaTime
             );
         }
-             
-            if (timer > Mathf.PI * 2) // Resets the "animation timer" for bobbing
+
+
+
+        // Main camera bobbing controller (movement based)
+        if (canMove){
+            // Calculate currentSpeed based on character velocity
+            float currentSpeed = characterController.velocity.magnitude;
+
+            // Scale bobSpeed and footstep delay based on the currentSpeed
+            float scaledBobSpeed = bobSpeed * (currentSpeed / 6); // Bobbing faster with higher speed
+            float scaledFootstepDelay = Mathf.Clamp(0.5f / (currentSpeed / 4), 0.1f, 0.5f); // Adjust delay, with minimum and maximum thresholds
+
+            float targetRotation = Input.GetAxis("Horizontal") * -70 * Time.deltaTime * lookSpeed; // Adjust horizontal rotation
+            accumulatedRotation = Mathf.Lerp(accumulatedRotation, targetRotation, 0.08f); // Smoothness
+            rotationZ = Mathf.Clamp(accumulatedRotation, -6, 6); // Maximum rotation
+
+            // If the player is moving and grounded
+            if ((Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0) && characterController.isGrounded)
+            {
+                if (!canStartBobbing)
+                {
+                    initialCameraPosition = playerCamera.transform.localPosition;
+                    canStartBobbing = true;
+                }
+
+                // Adjust bobbing speed based on current speed
+                timer += scaledBobSpeed * Time.deltaTime;
+                newPosition = new Vector3(
+                    Mathf.Cos(timer) * bobAmount,
+                    initialCameraPosition.y + Mathf.Abs(Mathf.Sin(timer) * bobAmount),
+                    playerCamera.transform.localPosition.z
+                );
+
+                // Smooth camera bobbing transition
+                playerCamera.transform.localPosition = Vector3.Lerp(
+                    playerCamera.transform.localPosition,
+                    newPosition,
+                    smoothSpeed * Time.deltaTime
+                );
+
+                // Play footstep sound based on timer value and bobbing position
+                if (Time.time > lastFootstepTime + scaledFootstepDelay /4)
+                {
+                    if (timer < 0.2f)
+                    {
+                        if (playAtLowPoint) // Low point of the bobbing cycle
+                        {
+                            footstepAudioSource.PlayOneShot(footstepSound);
+                            playAtLowPoint = false; // Switch to high point for next sound
+                            lastFootstepTime = Time.time; // Reset footstep timer
+                        }
+                    }else if(timer > 3f){
+                
+                        if (!playAtLowPoint) // High point of the bobbing cycle
+                        {
+                            footstepAudioSource.PlayOneShot(footstepSound);
+                            playAtLowPoint = true; // Switch back to low point for next sound
+                            lastFootstepTime = Time.time; // Reset footstep timer
+                        }
+                    }
+                }
+            }else{
+                // Reset bobbing when not moving
+                canStartBobbing = false;
+                playerCamera.transform.localPosition = Vector3.Lerp(
+                    playerCamera.transform.localPosition,
+                    new Vector3(
+                        playerCamera.transform.localPosition.x,
+                        newPosition.y,
+                        playerCamera.transform.localPosition.z
+                    ),
+                    smoothSpeed * Time.deltaTime
+                );
+            }
+
+            // Reset the bobbing timer to avoid overflow
+            if (timer > Mathf.PI * 2)
             {
                 timer = 0;
             }
-            }
-            
         }
 
+    }
 
 }
