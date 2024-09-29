@@ -22,6 +22,9 @@ public class PowerPlantController : MonoBehaviour
     private Coroutine blinkCoroutine;
     private bool isBlinking = true;
 
+    bool isInWarningZone = false;
+    bool isInDeadZone = false;
+
     
     void Start()
     {
@@ -31,59 +34,80 @@ public class PowerPlantController : MonoBehaviour
 
     public void AddPower(float amount)
     {
-       power += amount;
+        if(power < 170){
+           power += amount;
+        }
     }
 
     void Update()
     {
-        power -= 0.002f;
-        arrow.transform.eulerAngles = new Vector3(
-        arrow.transform.eulerAngles.x,
-        arrow.transform.eulerAngles.y,
-        power
-        );
-
+         if(!isInDeadZone){
+            power -= 0.002f;
+            arrow.transform.eulerAngles = new Vector3(
+                arrow.transform.eulerAngles.x,
+                arrow.transform.eulerAngles.y,
+                power
+            );
+         }
         
 
-        if(power < minPower + 2){
-            if (!audioSource.isPlaying)
+        if (!isInDeadZone)
+        {
+            if (power < minPower + 10 || power > maxPower - 10)
             {
-                audioSource.clip = sound1;
-                audioSource.Play();
+                if (!isInWarningZone)
+                {
+                    if (!audioSource.isPlaying)
+                    {
+                        audioSource.clip = sound1;
+                        audioSource.Play();
+                    }
+                    isInWarningZone = true;
+                }
+            }
+            else
+            {
+                isInWarningZone = false;
+                if (audioSource.clip == sound1) audioSource.Stop();
             }
         }
 
-        if(power > maxPower - 2){
-            if (!audioSource.isPlaying)
+        if (power >= 59.8f || power <= -59.8f)
+        {
+            if (!isInDeadZone)
             {
-                audioSource.clip = sound2;
-                audioSource.Play();
-            }
-
-            if(power >= 59.8f){
                 power = 180;
+                if (!audioSource.isPlaying || audioSource.clip != sound2)
+                {
+                    audioSource.clip = sound2;
+                    audioSource.loop = true;
+                    audioSource.Play();
+                }
                 if (blinkCoroutine == null)
                 {
                     blinkCoroutine = StartCoroutine(BlinkImage());
                 }
-            }
-            if(power >= 179){
-                power = 180;
-                if (blinkCoroutine == null)
-                {
-                    blinkCoroutine = StartCoroutine(BlinkImage());
-                }
+                isInDeadZone = true;
+                arrow.transform.eulerAngles = new Vector3(
+                    arrow.transform.eulerAngles.x,
+                    arrow.transform.eulerAngles.y,
+                    180
+                );
+                isInWarningZone = false;
             }
         }
+        
     }
 
     public void addPower(float ammount){
+        if(!isInDeadZone){
         if(ammount == 1){
             power += 0.03f + Mathf.Clamp((power + 60) * 0.001f, 0, 0.2f);
             power = Mathf.Clamp(power, minPower, maxPower);
         }else if(ammount == -1){
             power -= 0.05f + Mathf.Clamp((power + 60) * 0.002f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);
+        }
         }
     }
 

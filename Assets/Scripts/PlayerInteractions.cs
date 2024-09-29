@@ -116,6 +116,7 @@ public class PlayerInteractions : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             crosshair.enabled = false;
+            crosshairDot.enabled = false;
         
     }
 
@@ -134,6 +135,7 @@ public class PlayerInteractions : MonoBehaviour
              Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             crosshair.enabled = true;
+            crosshairDot.enabled = true;
         
         powerPlantController = null;
     }
