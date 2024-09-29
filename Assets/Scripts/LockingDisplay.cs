@@ -11,6 +11,12 @@ public class LockingDisplay : MonoBehaviour
     public TextMeshProUGUI statusText;
     public StatsScreen rectangularScreenController;
 
+
+    public Transform gameUI;
+    public Transform preGameUI;
+    public Transform activateText;
+    public Transform activateTextTC;
+
     private bool isLocked = false;
     private bool isSearching = true;
     private Coroutine lockingCoroutine = null;
@@ -18,15 +24,36 @@ public class LockingDisplay : MonoBehaviour
     private float antennaBreakChance = 0.1f; // 10% chance of antenna breaking during data transfer (Will be replaced with automatical system later)
 
     public AudioSource audioSource;
+    private Coroutine blinkCoroutine;
+    private bool isBlinking = true;
 
     private void Start()
     {
         StartSearching(); // Start in searching mode
+        preGameUI.gameObject.SetActive(true);
+        gameUI.gameObject.SetActive(false);
+        activateText.gameObject.SetActive(true);
+        activateTextTC.gameObject.SetActive(true);
+        blinkCoroutine = StartCoroutine(BlinkText());
     }
 
     private void Update()
     {
-        if (isSearching)
+        if(!gameUI.gameObject.activeSelf){
+            if(Input.GetKeyDown(KeyCode.F)){
+                if (blinkCoroutine != null)
+                {
+                    StopCoroutine(blinkCoroutine);
+                    activateText.gameObject.SetActive(false);
+                    activateTextTC.gameObject.SetActive(false);
+                }
+                gameUI.gameObject.SetActive(true);
+                preGameUI.gameObject.SetActive(false);
+                activateText.gameObject.SetActive(false);
+            }
+        }
+
+        if (isSearching && gameUI.gameObject.activeSelf)
         {
             HandleInput();
         }
@@ -175,6 +202,16 @@ public class LockingDisplay : MonoBehaviour
 
             targetFrequency.anchoredPosition = randomPosition;
             targetFrequency.gameObject.SetActive(true); // Show target frequency
+        }
+    }
+
+    private IEnumerator BlinkText()
+    {
+        while (isBlinking)
+        {
+            activateText.gameObject.SetActive(!activateText.gameObject.activeSelf);
+            activateTextTC.gameObject.SetActive(!activateTextTC.gameObject.activeSelf);
+            yield return new WaitForSeconds(0.5f);
         }
     }
 }

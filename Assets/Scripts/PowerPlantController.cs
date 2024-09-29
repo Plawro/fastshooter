@@ -18,10 +18,14 @@ public class PowerPlantController : MonoBehaviour
 
     public AudioSource audioSource;
 
+    public Transform skullImage;
+    private Coroutine blinkCoroutine;
+    private bool isBlinking = true;
+
     
     void Start()
     {
-        
+        skullImage.gameObject.SetActive(false);
     }
 
 
@@ -58,9 +62,17 @@ public class PowerPlantController : MonoBehaviour
 
             if(power >= 59.8f){
                 power = 180;
+                if (blinkCoroutine == null)
+                {
+                    blinkCoroutine = StartCoroutine(BlinkImage());
+                }
             }
             if(power >= 179){
                 power = 180;
+                if (blinkCoroutine == null)
+                {
+                    blinkCoroutine = StartCoroutine(BlinkImage());
+                }
             }
         }
     }
@@ -72,6 +84,15 @@ public class PowerPlantController : MonoBehaviour
         }else if(ammount == -1){
             power -= 0.05f + Mathf.Clamp((power + 60) * 0.002f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);
+        }
+    }
+
+    private IEnumerator BlinkImage()
+    {
+        while (isBlinking)
+        {
+            skullImage.gameObject.SetActive(!skullImage.gameObject.activeSelf);
+            yield return new WaitForSeconds(0.7f);
         }
     }
 }

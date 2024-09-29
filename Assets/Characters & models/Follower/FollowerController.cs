@@ -29,18 +29,17 @@ public class FollowerController : MonoBehaviour
 
     private Vector3 lastKnownPosition; // Saving players position for better chasing experience
     private float idleTimer = 0f; // "Where is he" effect timer when enemy loses player out of sight
-    private float chaseMemoryTimer = 0f;  // Timer helps enemy to not immedeately lose player (corners, random glitches)
-    float predictTimer = 0; // Timer for predict mode
+    private float chaseMemoryTimer = 0f;  // Timer helps enemy to not immediately lose player (corners, random glitches)
+    private float predictTimer = 0f; // Timer for predict mode
+    private float waitBeforePatrol = 2f;  // Time to wait before returning to patrol
+    private float patrolWaitTimer = 0f;
+    private bool isWaitingToPatrol = false;  // Flag to control waiting state
+
     public AudioSource footstepAudioSource;
     public AudioClip footstepSound;
     public AudioClip runningFootstepSound;
     public AudioClip chasingSound;
     public AudioClip findingSound;
-
-
-    // Character has no gravity + animations based on velocity are only on predict & chase mode
-
-
 
     void Start()
     {
@@ -63,6 +62,23 @@ public class FollowerController : MonoBehaviour
 
     void Update()
     {
+        if (isWaitingToPatrol)
+        {
+            patrolWaitTimer -= Time.deltaTime;
+            if (patrolWaitTimer <= 0)
+            {
+                isWaitingToPatrol = false; // Stop waiting
+                wasChasing = false;        // Reset chasing flag
+                Patrol();                  // Resume patrol
+            }
+        }
+
+        if (isPlayerInSight)
+        {
+            isWaitingToPatrol = false; // Stop waiting if player is spotted again
+            Chase();
+        }
+
         if (Input.GetKeyDown(KeyCode.O))  // Used for Debug to manually start a patrol
         {
             isPatrolling = !isPatrolling; // Start/stop patrolling (stop = stops in current position)
@@ -76,7 +92,7 @@ public class FollowerController : MonoBehaviour
         isPlayerInSight = Physics.CheckSphere(transform.position, sightRange, playerLayer) && CanSeePlayer();
         isPlayerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
 
-        if (isPlayerInSight) // System for switching between modes
+        if (isPlayerInSight)
         {
             lastKnownPosition = player.position; // Update last seen position
             chaseMemoryTimer = 0f; // Reset chase memory timer
@@ -89,16 +105,13 @@ public class FollowerController : MonoBehaviour
             {
                 Chase();
             }
-        }
-        else if (chaseMemoryTimer < 2f && wasChasing)
+        }else if (chaseMemoryTimer < 2f && wasChasing)
         {
-            // Continue chasing if within the chase memory duration
             chaseMemoryTimer += Time.deltaTime;
             Chase();
         }
         else if (wasChasing)
         {
-            // Player lost, start predicting movement
             Predict();
         }
         else if (isSearching)
@@ -109,13 +122,9 @@ public class FollowerController : MonoBehaviour
         {
             Idle();
         }
-        else if (isPatrolling)
+        else if (isPatrolling && !isWaitingToPatrol)
         {
             Patrol();
-        }
-        else
-        {
-            StartIdle();
         }
     }
 
@@ -125,7 +134,8 @@ public class FollowerController : MonoBehaviour
         isSearching = false;
         isIdling = false;
 
-        if (agent.velocity.sqrMagnitude > 0.5f) // Determine if enemy is actually moving (last position can take less seconds to get to)
+        // Chase animation
+        if (agent.velocity.sqrMagnitude > 0.5f) 
         {
             anim.SetInteger("walkMode", 3); // Running animation
         }
@@ -134,8 +144,24 @@ public class FollowerController : MonoBehaviour
             anim.SetInteger("walkMode", 1); // Standing/idle animation
         }
 
-        agent.speed = runSpeed;
-        agent.SetDestination(player.position);
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(player.position, out hit, 1.0f, NavMesh.AllAreas)) // Checking if player is still on the NavMesh
+        {
+            agent.speed = runSpeed;
+            agent.SetDestination(player.position);
+        }
+        else
+        {
+            agent.SetDestination(lastKnownPosition); // Go to last known position
+            StartWaitBeforePatrol(); // Start the patrol delay timer
+            Debug.Log("Player out of NavMesh - waiting at last position.");
+        }
+    }
+
+    void StartWaitBeforePatrol()
+    {
+        isWaitingToPatrol = true;
+        patrolWaitTimer = waitBeforePatrol; // Set timer to wait before returning to patrol
     }
 
     void Attack()
@@ -145,13 +171,11 @@ public class FollowerController : MonoBehaviour
         agent.SetDestination(transform.position);
     }
 
-
-
     void Predict()
     {
         predictTimer += Time.deltaTime;
 
-        if (agent.velocity.sqrMagnitude > 0.1f) // Determine if enemy is actually moving (last position can take less seconds to get to)
+        if (agent.velocity.sqrMagnitude > 0.1f) // Determine if enemy is actually moving
         {
             anim.SetInteger("walkMode", 3); // Running animation
         }
@@ -169,9 +193,7 @@ public class FollowerController : MonoBehaviour
             wasChasing = false;
             Search();
         }
-
     }
-
 
     void Search()
     {
@@ -212,7 +234,7 @@ public class FollowerController : MonoBehaviour
     {
         anim.SetInteger("walkMode", 2);
         agent.speed = walkSpeed;
-        lastKnownPosition = player.position; // This shouldn't be here, but let's make it fun (gets players position later, defaultly last position is set when last time player in sight)
+        lastKnownPosition = player.position; // This shouldn't be here, but let's make it fun
         if (points.Length == 0) return;
 
         if (wasChasing)
@@ -250,11 +272,8 @@ public class FollowerController : MonoBehaviour
             directionToPlayer.Normalize();
             float angleToPlayer = Vector3.Angle(transform.forward, directionToPlayer);
 
-            // Only for scene view for Debug use
-            Debug.DrawLine(transform.position, transform.position + Quaternion.Euler(0, 170 / 2, 0) * transform.forward * sightRange, Color.red); // Right edge of FOV
-            Debug.DrawLine(transform.position, transform.position + Quaternion.Euler(0, -170 / 2, 0) * transform.forward * sightRange, Color.red); // Left edge of FOV
-
-            if (angleToPlayer <= 170 / 2)
+            // Adjust field of view angle to prevent backward detection
+            if (angleToPlayer <= 160 / 2) // Decreased from 170 for a narrower FOV
             {
                 if (!Physics.Raycast(transform.position, directionToPlayer, distanceToPlayer, obstacleMask))
                 {
@@ -267,18 +286,17 @@ public class FollowerController : MonoBehaviour
 
     int GetClosestPointIndex()
     {
-        int closestIndex = 0;
-        float closestDistance = Vector3.Distance(transform.position, points[0].position);
-        for (int i = 1; i < points.Length; i++)
+        float minDist = Mathf.Infinity;
+        int index = 0;
+        for (int i = 0; i < points.Length; i++)
         {
-            float distanceToPoint = Vector3.Distance(transform.position, points[i].position);
-            if (distanceToPoint < closestDistance)
+            float dist = Vector3.Distance(points[i].position, transform.position);
+            if (dist < minDist)
             {
-                closestIndex = i;
-                closestDistance = distanceToPoint;
+                minDist = dist;
+                index = i;
             }
         }
-
-        return closestIndex;
+        return index;
     }
 }

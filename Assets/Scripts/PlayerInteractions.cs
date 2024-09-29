@@ -18,6 +18,11 @@ public class PlayerInteractions : MonoBehaviour
     public LayerMask ignorePlayerLayer;
     public LayerMask ignorePreInteractableLayer;
     public Image crosshair;
+    public Image crosshairDot;
+
+    void Start(){
+        crosshairDot.gameObject.SetActive(false);
+    }
 
     void Update()
 {
@@ -30,7 +35,8 @@ public class PlayerInteractions : MonoBehaviour
     {
         if (hit.transform.CompareTag("Interactable"))
         {
-            crosshair.color = Color.blue; 
+            //crosshair.color = Color.blue; 
+            crosshairDot.gameObject.SetActive(true);
             
             CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
             Debug.DrawRay(ray.origin, ray.direction * lookDistance, Color.red);
@@ -69,12 +75,14 @@ public class PlayerInteractions : MonoBehaviour
         }
         else
         {
-            crosshair.color = Color.white;
+            //crosshair.color = Color.white;
+            crosshairDot.gameObject.SetActive(false);
         }
     }
     else
     {
-        crosshair.color = Color.white;
+        //crosshair.color = Color.white;
+        crosshairDot.gameObject.SetActive(false);
     }
 
     if (isUsingVirtualCamera && powerPlantController != null)
