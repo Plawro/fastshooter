@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
     float maxSpeed = 12f;
     float acceleration = 80f;
     float deceleration = 80f;
-    float jumpPower = 8f;
+    float jumpPower = 6f;
     public float gravity = 25f;
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 initialCameraPosition;

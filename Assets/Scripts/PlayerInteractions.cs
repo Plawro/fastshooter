@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Cinemachine;
+using TMPro;
+using UnityEditor;
 
 public class PlayerInteractions : MonoBehaviour
 {
@@ -17,11 +19,13 @@ public class PlayerInteractions : MonoBehaviour
     public LayerMask objectLayer;
     public LayerMask ignorePlayerLayer;
     public LayerMask ignorePreInteractableLayer;
-    public Image crosshair;
-    public Image crosshairDot;
+    public TextMeshProUGUI crosshair;
+    string crosshairText = "Interact";
+    public string crosshairSymbol = "+";
 
     void Start(){
-        crosshairDot.gameObject.SetActive(false);
+        crosshair.gameObject.SetActive(true);
+        crosshair.text = crosshairSymbol;
     }
 
     void Update()
@@ -35,13 +39,16 @@ public class PlayerInteractions : MonoBehaviour
     {
         if (hit.transform.CompareTag("Interactable"))
         {
-            //crosshair.color = Color.blue; 
-            crosshairDot.gameObject.SetActive(true);
             
             CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
             Debug.DrawRay(ray.origin, ray.direction * lookDistance, Color.red);
             if (foundCamera != null)
             {
+                
+                string crosshairText = "Use";
+                crosshair.text = crosshairText;
+                //crosshair.color = Color.blue; 
+
                 if(Input.GetKeyDown(KeyCode.E)){
                     if (isUsingVirtualCamera)
                     {
@@ -60,10 +67,17 @@ public class PlayerInteractions : MonoBehaviour
 
             }else if(hit.transform.name == "powerswitch"){
                 if(Input.GetKeyDown(KeyCode.E)){
+                    crosshairText = "Use";
+                    crosshair.text = crosshairText;
+
                     hit.transform.parent.transform.GetComponent<TowerController>().moveSpeed = hit.transform.parent.transform.GetComponent<TowerController>().fixSpeed;
                     hit.transform.parent.transform.GetComponent<TowerController>().MoveAntennaToZero();
                 }
             }else{ // Not screen or powerswitch, but door
+                    
+                crosshairText = hit.transform.parent.GetComponent<DoorController>().isOpen ? "Close" : "Open";
+                crosshair.text = crosshairText;
+                    
                 if(Input.GetKeyDown(KeyCode.F)){
                     hit.transform.parent.transform.GetComponent<DoorController>().StartCoroutine(hit.transform.parent.transform.GetComponent<DoorController>().OpenPartialDoor());;
                 }
@@ -76,24 +90,26 @@ public class PlayerInteractions : MonoBehaviour
         else
         {
             //crosshair.color = Color.white;
-            crosshairDot.gameObject.SetActive(false);
+            crosshairText = crosshairSymbol;
+            crosshair.text = crosshairText;
         }
     }
     else
     {
         //crosshair.color = Color.white;
-        crosshairDot.gameObject.SetActive(false);
+        crosshairText = crosshairSymbol;
+        crosshair.text = crosshairText;
     }
 
     if (isUsingVirtualCamera && powerPlantController != null)
     {
         if (Input.GetKey(KeyCode.A))
         {
-            powerPlantController.addPower(-1f);
+            powerPlantController.AddPower(-1f);
         }
         else if (Input.GetKey(KeyCode.D))
         {
-            powerPlantController.addPower(1f);
+            powerPlantController.AddPower(1f);
         }
     }
 }
@@ -116,7 +132,6 @@ public class PlayerInteractions : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             crosshair.enabled = false;
-            crosshairDot.enabled = false;
         
     }
 
@@ -135,7 +150,6 @@ public class PlayerInteractions : MonoBehaviour
              Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             crosshair.enabled = true;
-            crosshairDot.enabled = true;
         
         powerPlantController = null;
     }
