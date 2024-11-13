@@ -16,12 +16,13 @@ public class PlayerInteractions : MonoBehaviour
     private CinemachineVirtualCamera activeVirtualCamera;
     private bool isUsingVirtualCamera = false;
 
-    public LayerMask objectLayer;
-    public LayerMask ignorePlayerLayer;
-    public LayerMask ignorePreInteractableLayer;
+    public LayerMask ignoreLayer;
     public TextMeshProUGUI crosshair;
     string crosshairText = "Interact";
     public string crosshairSymbol = "+";
+
+    public Transform leftHand;
+    public Transform rightHand;
 
     void Start(){
         crosshair.gameObject.SetActive(true);
@@ -33,13 +34,10 @@ public class PlayerInteractions : MonoBehaviour
     Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
     RaycastHit hit;
 
-    int combinedMask = objectLayer.value | ~ignorePlayerLayer.value | ~ignorePreInteractableLayer.value;
-
-    if (Physics.Raycast(ray, out hit, lookDistance, combinedMask))
+    if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer))
     {
-        if (hit.transform.CompareTag("Interactable"))
+        if (hit.transform.CompareTag("Interactable") && hit.transform.name != "DoubleSlideDoor") // Doors may be interactable, but automatical doors may cause problems :( and don't need interaction
         {
-            
             CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
             Debug.DrawRay(ray.origin, ray.direction * lookDistance, Color.red);
             if (foundCamera != null)
@@ -73,8 +71,29 @@ public class PlayerInteractions : MonoBehaviour
                     hit.transform.parent.transform.GetComponent<TowerController>().moveSpeed = hit.transform.parent.transform.GetComponent<TowerController>().fixSpeed;
                     hit.transform.parent.transform.GetComponent<TowerController>().MoveAntennaToZero();
                 }
-            }else{ // Not screen or powerswitch, but door
-                    
+                
+            }else if(hit.transform.name == "DC uploader"){
+                if(Input.GetKeyDown(KeyCode.E)){
+                    Debug.Log("Activated");
+                }
+
+                if(leftHand.childCount > 0 || rightHand.childCount > 0){//    !!!!    Later add what can be placed in    !!!!
+                    crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " in Uploader";
+                    crosshair.text = crosshairText;
+                }
+                
+                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
+                    leftHand.GetChild(0).transform.parent = hit.transform;
+                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos; // First 2 childs are model parts
+                }
+
+                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
+                    rightHand.GetChild(0).transform.parent = hit.transform;
+                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos;
+                }
+                
+            }else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null){ // Any interactable door, to fix "curtain bug" - add option for doorcontroller and istrigger collider on main object - when opened
+                                                                            //for example, player doesnt need to look at the object (side of curtains where the collider is) but in the centre where will always be one collider
                 crosshairText = hit.transform.parent.GetComponent<DoorController>().isOpen ? "Close" : "Open";
                 crosshair.text = crosshairText;
                     
@@ -85,6 +104,18 @@ public class PlayerInteractions : MonoBehaviour
                 if(Input.GetKeyDown(KeyCode.E)){
                     hit.transform.parent.transform.GetComponent<DoorController>().ChangeDoorMode();
                 } 
+            }else{ // Pick up-able items
+                crosshairText = "Pick up " + hit.transform.name;
+                crosshair.text = crosshairText;
+                if(Input.GetKeyDown(KeyCode.Mouse0)){
+                    hit.transform.position = leftHand.position;
+                    hit.transform.parent = leftHand;
+                }
+
+                if(Input.GetKeyDown(KeyCode.Mouse1)){
+                    hit.transform.position = rightHand.position;
+                    hit.transform.parent = rightHand;
+                }
             }
         }
         else

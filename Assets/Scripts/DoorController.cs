@@ -135,7 +135,7 @@ public class DoorController : MonoBehaviour
 
         while (Mathf.Abs(currentAngle) < Mathf.Abs(targetAngle))
         {
-            float step = 80f * Time.deltaTime;
+            float step = 180f * Time.deltaTime;
             door1.transform.Rotate(Vector3.up, step * Mathf.Sign(targetAngle));
             currentAngle += step * Mathf.Sign(targetAngle);
             yield return null;
@@ -150,7 +150,7 @@ public class DoorController : MonoBehaviour
 
         while (Mathf.Abs(currentAngle) > tolerance)
         {
-            float step = 50f * Time.deltaTime;
+            float step = 180f * Time.deltaTime;
             door1.transform.Rotate(Vector3.up, -step * Mathf.Sign(currentAngle));
             currentAngle -= step * Mathf.Sign(currentAngle);
             yield return null;
