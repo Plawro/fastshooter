@@ -10,6 +10,7 @@ public class PlayerInteractions : MonoBehaviour
 {
     public PlayerController playerController;
     public PowerPlantController powerPlantController;
+    public StatsScreen statsScreen;
     public Camera mainCamera;
     public float lookDistance = 5f;
 
@@ -24,13 +25,15 @@ public class PlayerInteractions : MonoBehaviour
     public Transform leftHand;
     public Transform rightHand;
 
+    public string nowInteractingWith = "";
+
     void Start(){
         crosshair.gameObject.SetActive(true);
         crosshair.text = crosshairSymbol;
     }
 
     void Update()
-{
+    {
     Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
     RaycastHit hit;
 
@@ -50,28 +53,43 @@ public class PlayerInteractions : MonoBehaviour
                 if(Input.GetKeyDown(KeyCode.E)){
                     if (isUsingVirtualCamera)
                     {
+                        nowInteractingWith = "";
                         SwitchToMainCamera();
                     }
                     else
                     {
-                        if (hit.transform.name == "Screen1")
+                        if (hit.transform.name == "PowerPlantDisplay")
                         {
                             powerPlantController = hit.transform.parent.GetComponent<PowerPlantController>();
+                            nowInteractingWith = "PowerPlantDisplay";
+                        }else if(hit.transform.name == "LockingDisplay"){
+                            nowInteractingWith = "LockingDisplay";
+                        }else if(hit.transform.name == "StatsScreen"){
+                            nowInteractingWith = "StatsScreen";
                         }
                         SwitchToVirtualCamera(foundCamera);
                     }
                 }
                 
 
-            }else if(hit.transform.name == "powerswitch"){
-                if(Input.GetKeyDown(KeyCode.E)){
-                    crosshairText = "Use";
+            }else if (hit.transform.name == "powerswitch") {
+                if (hit.transform.parent.transform.GetComponent<TowerController>().isAntennaBroken) {
+                    crosshairText = "Hold to turn tower on";
                     crosshair.text = crosshairText;
-
-                    hit.transform.parent.transform.GetComponent<TowerController>().moveSpeed = hit.transform.parent.transform.GetComponent<TowerController>().fixSpeed;
-                    hit.transform.parent.transform.GetComponent<TowerController>().MoveAntennaToZero();
+                    if (Input.GetKey(KeyCode.E)) {
+                        var towerController = hit.transform.parent.transform.GetComponent<TowerController>();
+                        towerController.RepairAntenna();
+                    }else{
+                        var towerController = hit.transform.parent.transform.GetComponent<TowerController>();
+                        towerController.StopRepairingAntenna();
+                    }
+                } else {
+                    crosshairText = "Turn tower off";
+                    crosshair.text = crosshairText;
+                    if (Input.GetKeyDown(KeyCode.E)) {
+                        statsScreen.BreakAntenna();
+                    }
                 }
-                
             }else if(hit.transform.name == "DC uploader"){
                 if(Input.GetKeyDown(KeyCode.E)){
                     Debug.Log("Activated");

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PowerPlantController : MonoBehaviour
 {
+    public GameObject playerObject;
     public float minPower;
     public float maxPower;
     // -60 & 60

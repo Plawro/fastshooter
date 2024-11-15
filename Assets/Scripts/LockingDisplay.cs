@@ -5,6 +5,7 @@ using TMPro;
 
 public class LockingDisplay : MonoBehaviour
 {
+    public GameObject playerObject;
      public RectTransform currentFrequency;
     public RectTransform targetFrequency;
     public RectTransform squareScreenArea;
@@ -40,7 +41,7 @@ public class LockingDisplay : MonoBehaviour
     private void Update()
     {
         if(!gameUI.gameObject.activeSelf){
-            if(Input.GetKeyDown(KeyCode.F)){
+            if(Input.GetKeyDown(KeyCode.F) && playerObject.GetComponent<PlayerInteractions>().nowInteractingWith == "LockingDisplay"){
                 if (blinkCoroutine != null)
                 {
                     StopCoroutine(blinkCoroutine);
@@ -53,7 +54,7 @@ public class LockingDisplay : MonoBehaviour
             }
         }
 
-        if (isSearching && gameUI.gameObject.activeSelf)
+        if (isSearching && gameUI.gameObject.activeSelf && playerObject.GetComponent<PlayerInteractions>().nowInteractingWith == "LockingDisplay")
         {
             HandleInput();
         }

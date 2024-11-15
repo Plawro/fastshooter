@@ -6,17 +6,19 @@ using UnityEngine.UI;
 
 public class StatsScreen : MonoBehaviour
 {  
+    public GameObject playerObject;
      public Image[] progressBarImages; // Array of 26 images representing the progress bar
     public TextMeshProUGUI dataPackCountText;
     public TextMeshProUGUI countdownText; // Antenna warning text
     public LockingDisplay squareScreenController;
+    public TowerController towerController;
 
     private int dataPackCount = 0;
     private bool isTransferringData = false;
-    private bool isAntennaBroken = false;
     private Coroutine dataTransferCoroutine = null;
     private Coroutine countdownCoroutine = null;
     public AudioSource audioSource;
+    float progress = 0;
 
     private void Start()
     {
@@ -28,19 +30,18 @@ public class StatsScreen : MonoBehaviour
     {
         if (isTransferringData) return; // Prevent multiple data transfers
         isTransferringData = true;
-        isAntennaBroken = false;
         dataTransferCoroutine = StartCoroutine(DataTransferProgress());
+        progress = 0f;
     }
 
     private IEnumerator DataTransferProgress()
     {
-        float progress = 0f;
         float transferDuration = 60f; // Assume data transfer takes 60 seconds
         int numberOfImages = progressBarImages.Length;
 
         while (progress < 1f)
         {
-            if (isAntennaBroken)
+            if (towerController.isAntennaBroken)
             {
                 yield break; // Exit if antenna is broken
             }
@@ -54,43 +55,47 @@ public class StatsScreen : MonoBehaviour
         CompleteDataTransfer();
     }
 
-    public void BreakAntenna()
-    {
-        if (isTransferringData && !isAntennaBroken)
-        {
-            isAntennaBroken = true;
-            StopCoroutine(dataTransferCoroutine); // Stop data transfer
-
-            if (countdownCoroutine != null)
-                StopCoroutine(countdownCoroutine); // Ensure no existing countdown is running
-
-            countdownCoroutine = StartCoroutine(CountdownToReset());
-        }
+    public void BreakAntenna() {
+    if (!towerController.isAntennaBroken) {
+        towerController.isAntennaBroken = true;
+        towerController.BreakAntenna();
+        if (dataTransferCoroutine != null) StopCoroutine(dataTransferCoroutine); // Stop data transfer
+        if (countdownCoroutine != null) StopCoroutine(countdownCoroutine); // Just in case there is already a timer going
+        countdownCoroutine = StartCoroutine(CountdownToReset());
     }
+}
 
     private IEnumerator CountdownToReset()
     {
+        int countdown = 30;
+        countdownText.text = $"Antenna broken! [Hold P] Time till signal lose: {countdown}";
         countdownText.gameObject.SetActive(true);
-        int countdown = 10;
-        countdownText.text = $"Antenna broken! Press 'P' to fix: {countdown}";
 
         while (countdown > 0)
         {
             if (Input.GetKeyDown(KeyCode.P))
             {
                 countdownText.gameObject.SetActive(false);
-                isAntennaBroken = false;
+                towerController.isAntennaBroken = false;
                 dataTransferCoroutine = StartCoroutine(DataTransferProgress()); // Resume data transfer
                 yield break;
             }
 
             yield return new WaitForSeconds(1f);
             countdown--;
-            countdownText.text = $"[DEBUG: P] Antenna broken! Repair immedeately! Time till signal lose: {countdown}";
+            countdownText.text = $"Antenna broken! [Hold P] Time till signal lose: {countdown}";
         }
 
         // Countdown expired, reset transfer and respawn target frequency
         ResetProgressAndSearch();
+    }
+
+    public void FixAntenna() {
+        countdownText.gameObject.SetActive(false);
+        if (isTransferringData) {
+            dataTransferCoroutine = StartCoroutine(DataTransferProgress()); // Resume data transfer
+        }
+        StopCoroutine(countdownCoroutine);
     }
 
     private void UpdateProgressBar(int index)
@@ -119,6 +124,7 @@ public class StatsScreen : MonoBehaviour
 
     private void ResetProgressAndSearch()
     {
+        towerController.isAntennaBroken = false;
         isTransferringData = false;
         ResetProgressBar();
         countdownText.gameObject.SetActive(false); // Hide countdown

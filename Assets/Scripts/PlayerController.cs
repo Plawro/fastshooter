@@ -34,7 +34,7 @@ public class PlayerController : MonoBehaviour
     float acceleration = 80f;
     float deceleration = 80f;
     float jumpPower = 6f;
-    public float gravity = 25f;
+    public float gravity = 30f;
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 initialCameraPosition;
 
@@ -163,11 +163,11 @@ public class PlayerController : MonoBehaviour
         }
             
         
-
+        /*
         if(Input.GetKey(KeyCode.U) && RenderSettings.fogDensity >= 0.01){
             RenderSettings.fogDensity -= Time.deltaTime /20;
         }
-
+        */
 
 
 
