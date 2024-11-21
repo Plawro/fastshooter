@@ -18,8 +18,8 @@ public class LockingDisplay : MonoBehaviour
     public Transform activateText;
     public Transform activateTextTC;
 
-    private bool isLocked = false;
-    private bool isSearching = true;
+    public bool isLocked = false;
+    public bool isSearching = true;
     private Coroutine lockingCoroutine = null;
     private Coroutine searchBlinkCoroutine = null;
     private float antennaBreakChance = 0.1f; // 10% chance of antenna breaking during data transfer (Will be replaced with automatical system later)
@@ -27,6 +27,8 @@ public class LockingDisplay : MonoBehaviour
     public AudioSource audioSource;
     private Coroutine blinkCoroutine;
     private bool isBlinking = true;
+    public TowerController towerController;
+    private Coroutine checkAntennaRoutine;
 
     private void Start()
     {
@@ -141,38 +143,33 @@ public class LockingDisplay : MonoBehaviour
     {
         isSearching = true;
         isLocked = false;
-        statusText.text = "Searching";
+        statusText.text = "SEARCHING";
 
         // Start the blinking animation for "searching" mode
         if (searchBlinkCoroutine == null)
         {
-            searchBlinkCoroutine = StartCoroutine(SearchBlinkAnimation());
+            searchBlinkCoroutine = StartCoroutine(rectangularScreenController.SearchBlinkAnimation());
         }
 
-        // Reset the target frequency to a new random position
-        StartCoroutine(SpawnNewTargetFrequency());
+        checkAntennaRoutine = StartCoroutine(CheckAntennaStatus());
     }
 
-
-    private IEnumerator SearchBlinkAnimation()
+    //Check if antenna is not broken, if not, search for new frequency
+    private IEnumerator CheckAntennaStatus()
     {
-        int currentIndex = 0;
-        int totalImages = rectangularScreenController.progressBarImages.Length;
-
-        while (isSearching)
+        while (towerController.isAntennaBroken)
         {
-            for (int i = 0; i < totalImages; i++)
-            {
-                rectangularScreenController.progressBarImages[i].gameObject.SetActive(i == currentIndex);
-            }
-
-            currentIndex = (currentIndex + 1) % totalImages;
-            yield return new WaitForSeconds(0.1f); // Adjust for blinking speed
+            yield return new WaitForSeconds(2f);
         }
+        // Once the antenna is not broken, start the other coroutine
+        StartCoroutine(SpawnNewTargetFrequency());
 
-        // Reset all images when not searching
-        rectangularScreenController.ResetProgressBar();
+        // Optionally stop this routine to clean up yeehaw
+        checkAntennaRoutine = null;
     }
+
+
+    
 
     public void StopSearchingAnimation()
     {

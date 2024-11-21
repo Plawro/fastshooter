@@ -262,6 +262,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                     {
                         if (playAtLowPoint) // Low point of the bobbing cycle
                         {
+                            footstepAudioSource.pitch = Random.Range(0.6f, 1.4f);
                             footstepAudioSource.PlayOneShot(footstepSound);
                             playAtLowPoint = false; // Switch to high point for next sound
                             lastFootstepTime = Time.time; // Reset footstep timer
@@ -270,6 +271,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                 
                         if (!playAtLowPoint) // High point of the bobbing cycle
                         {
+                            footstepAudioSource.pitch = Random.Range(0.6f, 1.4f);
                             footstepAudioSource.PlayOneShot(footstepSound);
                             playAtLowPoint = true; // Switch back to low point for next sound
                             lastFootstepTime = Time.time; // Reset footstep timer

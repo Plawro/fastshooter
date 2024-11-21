@@ -23,6 +23,7 @@ public class AmbientController : MonoBehaviour
 
     private int indoorsCollidersTouched = 0;  // Track how many indoor colliders are touched
 
+
 private void OnTriggerEnter(Collider other)
 {
     if (other.CompareTag("Player") && !isOtherPlaying)
@@ -35,6 +36,7 @@ private void OnTriggerEnter(Collider other)
             currentFadeRoutine = StartCoroutine(FadeToIndoor());
         }
     }
+
 }
 
 private void OnTriggerExit(Collider other)
@@ -49,11 +51,23 @@ private void OnTriggerExit(Collider other)
             currentFadeRoutine = StartCoroutine(FadeToOutdoor());
         }
     }
+
 }
 
 
     private void Update()
 {
+    if(isIndoors){ // When something is waiting outside, spawn it after player has full fog, otherwise player can see it!
+        if(RenderSettings.fogDensity >= 0.01){
+            RenderSettings.fogDensity -= Time.deltaTime /20;
+        }
+    }else{
+        if(RenderSettings.fogDensity <= 0.06){
+            RenderSettings.fogDensity += Time.deltaTime /20;
+        }
+    }
+        
+
     if (isOtherPlaying != previousIsOtherPlaying)
     {
         previousIsOtherPlaying = isOtherPlaying;

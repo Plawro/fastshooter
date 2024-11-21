@@ -45,7 +45,7 @@ public class PowerPlantController : MonoBehaviour
     void Update()
     {
          if(!isInDeadZone){
-            power -= 0.002f;
+            power -= 0.003f;
             arrow.transform.eulerAngles = new Vector3(
                 arrow.transform.eulerAngles.x,
                 arrow.transform.eulerAngles.y,
@@ -56,7 +56,7 @@ public class PowerPlantController : MonoBehaviour
 
         if (!isInDeadZone)
         {
-            if (power < minPower + 10 || power > maxPower - 10)
+            if (power < minPower + 6 || power > maxPower - 6)
             {
                 if (!isInWarningZone)
                 {
@@ -113,7 +113,7 @@ public class PowerPlantController : MonoBehaviour
     public void AddPower(float ammount){
         if(!isInDeadZone){
         if(ammount == 1){
-            power += 0.03f + Mathf.Clamp((power + 60) * 0.001f, 0, 0.2f);
+            power += 0.03f + Mathf.Clamp((power + 60) * 0.001f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);
         }else if(ammount == -1){
             power -= 0.05f + Mathf.Clamp((power + 60) * 0.002f, 0, 1f);

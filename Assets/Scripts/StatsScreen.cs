@@ -30,8 +30,8 @@ public class StatsScreen : MonoBehaviour
     {
         if (isTransferringData) return; // Prevent multiple data transfers
         isTransferringData = true;
-        dataTransferCoroutine = StartCoroutine(DataTransferProgress());
         progress = 0f;
+        dataTransferCoroutine = StartCoroutine(DataTransferProgress());
     }
 
     private IEnumerator DataTransferProgress()
@@ -87,7 +87,11 @@ public class StatsScreen : MonoBehaviour
         }
 
         // Countdown expired, reset transfer and respawn target frequency
-        ResetProgressAndSearch();
+        squareScreenController.targetFrequency.gameObject.SetActive(false);
+        squareScreenController.statusText.text = "NO SIGNAL";
+        isTransferringData = false;
+        progress = 0;
+        ResetProgress();
     }
 
     public void FixAntenna() {
@@ -96,6 +100,10 @@ public class StatsScreen : MonoBehaviour
             dataTransferCoroutine = StartCoroutine(DataTransferProgress()); // Resume data transfer
         }
         StopCoroutine(countdownCoroutine);
+        countdownText.gameObject.SetActive(false); // Hide countdown
+        if (!isTransferringData) {
+            squareScreenController.StartSearching(); // Reset and start searching again
+        }
     }
 
     private void UpdateProgressBar(int index)
@@ -119,16 +127,16 @@ public class StatsScreen : MonoBehaviour
         dataPackCount++;
         dataPackCountText.text = $"Data Packs Transferred: {dataPackCount}";
         ResetProgressBar();
+        progress = 0;
         squareScreenController.StartSearching();
     }
 
-    private void ResetProgressAndSearch()
+    private void ResetProgress()
     {
-        towerController.isAntennaBroken = false;
-        isTransferringData = false;
+        progress = 0;
+        countdownText.text = $"Antenna broken! The download has been lost. Awaiting repair.";
+        countdownText.gameObject.SetActive(true);
         ResetProgressBar();
-        countdownText.gameObject.SetActive(false); // Hide countdown
-        squareScreenController.StartSearching(); // Reset and start searching again
     }
 
     public void ResetProgressBar()
@@ -137,5 +145,25 @@ public class StatsScreen : MonoBehaviour
         {
             img.gameObject.SetActive(false);
         }
+    }
+
+    public IEnumerator SearchBlinkAnimation()
+    {
+        int currentIndex = 0;
+        int totalImages = progressBarImages.Length;
+
+        while (squareScreenController.isSearching)
+        {
+            for (int i = 0; i < totalImages; i++)
+            {
+                progressBarImages[i].gameObject.SetActive(i == currentIndex);
+            }
+
+            currentIndex = (currentIndex + 1) % totalImages;
+            yield return new WaitForSeconds(0.1f); // Adjust for blinking speed
+        }
+
+        // Reset all images when not searching
+        ResetProgressBar();
     }
 }
