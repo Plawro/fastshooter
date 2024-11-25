@@ -6,5 +6,5 @@ Použité nástroje: Unity - Herní engine, Blender - 3D modely, Audacity - Úpr
 <br>Použité knihovny v Unity: Unity Technologies Inc. (Cinemachine, TextMeshPro, ...), PSX_Forest - textury pro terén
 <br>
 ## Zdroje
-DaFont - Fonty, Mixamo - Neoficiální (dočasné) modely (a animace) postav
+DaFont - Fonty, Mixamo - Neoficiální (dočasné) modely (a animace) postav, Freesound - zvukové efekty
 
