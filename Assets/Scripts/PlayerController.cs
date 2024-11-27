@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviour
 
     // SETTINGS
     public float lookSpeed = 2f;
-    float bobAmount = 0.15f;
+    float bobAmount = 0.1f;
 
     void Start() // Prepares character for the game
     {
@@ -104,7 +104,7 @@ public class PlayerController : MonoBehaviour
             // Calculate the movement direction
             moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
-            // Normalize the movement vector to avoid diagonal speed boosting
+            // Normalize the movement vector to avoid diagonal speed boosting (yeah I added it here, it was too OP)
             if (moveDirection.magnitude > 1f)
             {
                 moveDirection.Normalize();
@@ -198,7 +198,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                 playerCamera.transform.localPosition,
                 new Vector3(
                     playerCamera.transform.localPosition.x,
-                    Mathf.Clamp(newPosition.y + rb.velocity.y / 10, 0.2f, 1.2f),
+                    Mathf.Clamp(newPosition.y + rb.velocity.y / 10, 0.6f, 1.2f),
                     playerCamera.transform.localPosition.z
                 ),
                 smoothSpeed * Time.deltaTime * 3
@@ -225,7 +225,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
 
             // Scale bobSpeed and footstep delay based on the currentSpeed
             float scaledBobSpeed = bobSpeed * (currentSpeed / 6); // Bobbing faster with higher speed
-            float scaledFootstepDelay = Mathf.Clamp(0.5f / (currentSpeed / 4), 0.1f, 0.5f); // Adjust delay, with minimum and maximum thresholds
+            float scaledFootstepDelay = Mathf.Clamp(0.5f / (currentSpeed / 4), 0.2f, 0.4f); // Adjust delay, with minimum and maximum thresholds
 
             float targetRotation = Input.GetAxis("Horizontal") * -70 * Time.deltaTime * lookSpeed; // Adjust horizontal rotation
             accumulatedRotation = Mathf.Lerp(accumulatedRotation, targetRotation, 0.08f); // Smoothness
@@ -284,11 +284,11 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                 playerCamera.transform.localPosition = Vector3.Lerp(
                     playerCamera.transform.localPosition,
                     new Vector3(
-                        playerCamera.transform.localPosition.x,
-                        newPosition.y,
-                        playerCamera.transform.localPosition.z
+                        0,//playerCamera.transform.localPosition.x,
+                        0.7531425f,//newPosition.y,
+                        0//playerCamera.transform.localPosition.z
                     ),
-                    smoothSpeed * Time.deltaTime
+                    smoothSpeed * 2 * Time.deltaTime
                 );
             }
 

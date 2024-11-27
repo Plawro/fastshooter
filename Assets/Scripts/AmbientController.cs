@@ -6,6 +6,7 @@ public class AmbientController : MonoBehaviour
 {
     public AudioSource inAmbience;
     public AudioSource outAmbience;
+    public AudioSource outWindAmbience;
     public float fadeDuration = 2.0f; // Transition in seconds
 
     private bool isIndoors = false;
@@ -101,6 +102,7 @@ private void OnTriggerExit(Collider other)
     {
         timer += Time.deltaTime;
         outAmbience.volume = Mathf.Lerp(1, 0, timer / fadeDuration); // Fade outdoor sound out
+        outWindAmbience.volume = Mathf.Lerp(0.2f, 0, timer / fadeDuration); // Fade outdoor sound out
         inAmbience.volume = Mathf.Lerp(0, 1, timer / fadeDuration); // Fade indoor sound in
         yield return null;
     }
@@ -115,6 +117,7 @@ private IEnumerator FadeToOutdoor()
         timer += Time.deltaTime;
         inAmbience.volume = Mathf.Lerp(1, 0, timer / fadeDuration); // Fade indoor sound out
         outAmbience.volume = Mathf.Lerp(0, 1, timer / fadeDuration); // Fade outdoor sound in
+        outWindAmbience.volume = Mathf.Lerp(0, 0.2f, timer / fadeDuration); // Fade outdoor sound in
         yield return null;
     }
 }
@@ -128,6 +131,7 @@ private IEnumerator FadeOutBoth()
         timer += Time.deltaTime;
         inAmbience.volume = Mathf.Lerp(inAmbience.volume, 0, timer / fadeDuration); // Fade indoor to silence
         outAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
+        outWindAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
         yield return null;
     }
 }

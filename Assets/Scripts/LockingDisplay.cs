@@ -32,7 +32,7 @@ public class LockingDisplay : MonoBehaviour
 
     private void Start()
     {
-        StartSearching(); // Start in searching mode
+        targetFrequency.gameObject.SetActive(false);
         preGameUI.gameObject.SetActive(true);
         gameUI.gameObject.SetActive(false);
         activateText.gameObject.SetActive(true);
@@ -50,6 +50,7 @@ public class LockingDisplay : MonoBehaviour
                     activateText.gameObject.SetActive(false);
                     activateTextTC.gameObject.SetActive(false);
                 }
+                StartSearching(); // Start in searching mode
                 gameUI.gameObject.SetActive(true);
                 preGameUI.gameObject.SetActive(false);
                 activateText.gameObject.SetActive(false);
@@ -66,8 +67,18 @@ public class LockingDisplay : MonoBehaviour
 
     private void HandleInput()
     {
-        float moveSpeed = 200f * Time.deltaTime;
-        Vector2 move = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")) * moveSpeed;
+        float moveSpeed = 100f * Time.deltaTime;
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+
+        if (Mathf.Abs(horizontal) > Mathf.Abs(vertical))
+        {
+            vertical = 0;
+        }else{
+            horizontal = 0;
+        }
+
+        Vector2 move = new Vector2(horizontal, vertical) * moveSpeed;
         currentFrequency.anchoredPosition += move;
 
         if (isLocked) return;
@@ -95,8 +106,8 @@ public class LockingDisplay : MonoBehaviour
         float halfWidth = currentFrequency.rect.width / 2;
         float halfHeight = currentFrequency.rect.height / 2;
 
-        clampedPosition.x = Mathf.Clamp(clampedPosition.x, -squareScreenArea.rect.width / 2 + halfWidth, squareScreenArea.rect.width / 2 - halfWidth);
-        clampedPosition.y = Mathf.Clamp(clampedPosition.y, -squareScreenArea.rect.height / 2 + halfHeight, squareScreenArea.rect.height / 2 - halfHeight);
+        clampedPosition.x = Mathf.Clamp(clampedPosition.x, -squareScreenArea.rect.width / 2 + halfWidth + 5, squareScreenArea.rect.width / 2 - halfWidth - 5);
+        clampedPosition.y = Mathf.Clamp(clampedPosition.y, -squareScreenArea.rect.height / 2 + halfHeight + 5, squareScreenArea.rect.height / 2 - halfHeight - 5);
 
         currentFrequency.anchoredPosition = clampedPosition;
     }
@@ -105,7 +116,7 @@ public class LockingDisplay : MonoBehaviour
     {
         float lockTime = 3f;
         float elapsed = 0f;
-
+        statusText.text = "Locking";
         while (elapsed < lockTime)
         {
             if (!RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null))
@@ -143,7 +154,7 @@ public class LockingDisplay : MonoBehaviour
     {
         isSearching = true;
         isLocked = false;
-        statusText.text = "SEARCHING";
+        statusText.text = "Searching";
 
         // Start the blinking animation for "searching" mode
         if (searchBlinkCoroutine == null)
@@ -157,15 +168,14 @@ public class LockingDisplay : MonoBehaviour
     //Check if antenna is not broken, if not, search for new frequency
     private IEnumerator CheckAntennaStatus()
     {
-        while (towerController.isAntennaBroken)
+        targetFrequency.gameObject.SetActive(false);
+        Debug.Log(towerController.isAntennaBroken + GameController.Instance.DCuploader.CheckCapsule() + GameController.Instance.DCuploader.CheckCapsuleMode());
+        while (towerController.isAntennaBroken || GameController.Instance.DCuploader.CheckCapsule() == "Empty" || GameController.Instance.DCuploader.CheckCapsuleMode() == 1 || GameController.Instance.DCuploader.CheckCapsuleMode() == 2 || GameController.Instance.DCuploader.CheckCapsuleMode() == 3)
         {
             yield return new WaitForSeconds(2f);
         }
         // Once the antenna is not broken, start the other coroutine
-        StartCoroutine(SpawnNewTargetFrequency());
-
-        // Optionally stop this routine to clean up yeehaw
-        checkAntennaRoutine = null;
+        yield return SpawnNewTargetFrequency();
     }
 
 

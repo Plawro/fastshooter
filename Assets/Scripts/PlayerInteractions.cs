@@ -66,6 +66,8 @@ public class PlayerInteractions : MonoBehaviour
                             nowInteractingWith = "LockingDisplay";
                         }else if(hit.transform.name == "StatsScreen"){
                             nowInteractingWith = "StatsScreen";
+                        }else if(hit.transform.name == "ControlPanel"){
+                            nowInteractingWith = "ControlPanel";
                         }
                         SwitchToVirtualCamera(foundCamera);
                     }
@@ -95,19 +97,53 @@ public class PlayerInteractions : MonoBehaviour
                     Debug.Log("Activated");
                 }
 
-                if(leftHand.childCount > 0 || rightHand.childCount > 0){//    !!!!    Later add what can be placed in    !!!!
+                if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty") || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty")){
                     crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " in Uploader";
+                    crosshair.text = crosshairText;
+                }
+                
+                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
+                    leftHand.GetChild(0).transform.parent = hit.transform;
+                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos; // First 2 childs are model parts
+                    hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
+                }
+
+                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
+                    rightHand.GetChild(0).transform.parent = hit.transform;
+                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos;
+                    hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
+                }
+                
+            }else if(hit.transform.name == "DataCapsuleBasket"){
+                if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
+                    crosshairText = "Throw " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into trash";
+                    crosshair.text = crosshairText;
+                }
+                
+                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
+                    Destroy(leftHand.GetChild(0).gameObject);
+                }
+
+                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
+                    Destroy(rightHand.GetChild(0).gameObject);
+                }
+                
+            }else if(hit.transform.name == "ControlPanelCapsuleHolder"){
+                if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
+                    crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into control panel";
                     crosshair.text = crosshairText;
                 }
                 
                 if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
                     leftHand.GetChild(0).transform.parent = hit.transform;
-                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos; // First 2 childs are model parts
+                    hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
+                    hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
                 }
 
                 if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
                     rightHand.GetChild(0).transform.parent = hit.transform;
-                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos;
+                    hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
+                    hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
                 }
                 
             }else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null){ // Any interactable door, to fix "curtain bug" - add option for doorcontroller and istrigger collider on main object - when opened
@@ -125,14 +161,28 @@ public class PlayerInteractions : MonoBehaviour
             }else{ // Pick up-able items
                 crosshairText = "Pick up " + hit.transform.name;
                 crosshair.text = crosshairText;
-                if(Input.GetKeyDown(KeyCode.Mouse0)){
+                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount < 1){
                     hit.transform.position = leftHand.position;
                     hit.transform.parent = leftHand;
+                    if(leftHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ //Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
+                        leftHand.GetChild(0).transform.GetComponent<DataCapsule>().ChangeMode(3);
+                    }
+
+                    if(leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == hit.transform.name){ // This allows to tell uploader we took the capsule (we don't need to use Update to keep checking :OO)
+                        hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
+                    }
                 }
 
-                if(Input.GetKeyDown(KeyCode.Mouse1)){
+                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount < 1){
                     hit.transform.position = rightHand.position;
                     hit.transform.parent = rightHand;
+                    if(rightHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ //Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
+                        rightHand.GetChild(0).transform.GetComponent<DataCapsule>().ChangeMode(3);
+                    }
+                    
+                    if(rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == hit.transform.name){
+                        hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
+                    }
                 }
             }
         }
@@ -150,7 +200,7 @@ public class PlayerInteractions : MonoBehaviour
         crosshair.text = crosshairText;
     }
 
-    if (isUsingVirtualCamera && powerPlantController != null)
+    if (isUsingVirtualCamera && powerPlantController != null && nowInteractingWith == "PowerPlantDisplay")
     {
         if (Input.GetKey(KeyCode.A))
         {
@@ -160,6 +210,11 @@ public class PlayerInteractions : MonoBehaviour
         {
             powerPlantController.AddPower(1f);
         }
+    }
+
+    if (isUsingVirtualCamera && nowInteractingWith == "ControlPanel")
+    {
+        
     }
 }
 

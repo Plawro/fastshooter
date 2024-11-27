@@ -49,7 +49,7 @@ public class DoorController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other){
         if (other.TryGetComponent<CharacterController>(out CharacterController controller)){
-            if(!isOpen && openAutomatically){
+            if(!isOpen && openAutomatically && !GameController.Instance.isGeneratorDead){
                 ChangeDoorMode(true); // Or also OpenDoor() directly
             }
         }
@@ -57,7 +57,7 @@ public class DoorController : MonoBehaviour
 
     private void OnTriggerExit(Collider other){
         if (other.TryGetComponent<CharacterController>(out CharacterController controller)){
-            if(isOpen && openAutomatically){
+            if(isOpen && openAutomatically && !GameController.Instance.isGeneratorDead){
                 ChangeDoorMode(false); // Or also CloseDoor() directly
             }
         }

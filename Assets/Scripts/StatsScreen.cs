@@ -36,6 +36,7 @@ public class StatsScreen : MonoBehaviour
 
     private IEnumerator DataTransferProgress()
     {
+        GameController.Instance.DCuploader.CapsuleUploading();
         float transferDuration = 60f; // Assume data transfer takes 60 seconds
         int numberOfImages = progressBarImages.Length;
 
@@ -48,6 +49,14 @@ public class StatsScreen : MonoBehaviour
 
             progress += Time.deltaTime / transferDuration;
             int currentIndex = Mathf.FloorToInt(progress * numberOfImages);
+            if(GameController.Instance.DCuploader.transform.childCount != 3){
+                isTransferringData = false;
+                StopCoroutine(dataTransferCoroutine);
+                ResetProgressBar();
+                progress = 0;
+                squareScreenController.StartSearching();
+                //Set color to red
+            }
             UpdateProgressBar(currentIndex);
             yield return null;
         }
@@ -68,22 +77,22 @@ public class StatsScreen : MonoBehaviour
     private IEnumerator CountdownToReset()
     {
         int countdown = 30;
-        countdownText.text = $"Antenna broken! [Hold P] Time till signal lose: {countdown}";
+        countdownText.text = $"Antenna broken! Time till signal lose: {countdown}";
         countdownText.gameObject.SetActive(true);
 
         while (countdown > 0)
         {
-            if (Input.GetKeyDown(KeyCode.P))
+            /*if (Input.GetKeyDown(KeyCode.P))
             {
                 countdownText.gameObject.SetActive(false);
                 towerController.isAntennaBroken = false;
                 dataTransferCoroutine = StartCoroutine(DataTransferProgress()); // Resume data transfer
                 yield break;
-            }
+            }*/
 
             yield return new WaitForSeconds(1f);
             countdown--;
-            countdownText.text = $"Antenna broken! [Hold P] Time till signal lose: {countdown}";
+            countdownText.text = $"Antenna broken! Time till signal lose: {countdown}";
         }
 
         // Countdown expired, reset transfer and respawn target frequency
@@ -126,6 +135,7 @@ public class StatsScreen : MonoBehaviour
         isTransferringData = false;
         dataPackCount++;
         dataPackCountText.text = $"Data Packs Transferred: {dataPackCount}";
+        GameController.Instance.DCuploader.CapsuleFinished();
         ResetProgressBar();
         progress = 0;
         squareScreenController.StartSearching();
@@ -135,6 +145,10 @@ public class StatsScreen : MonoBehaviour
     {
         progress = 0;
         countdownText.text = $"Antenna broken! The download has been lost. Awaiting repair.";
+        if(GameController.Instance.DCuploader.transform.childCount == 3){
+            GameController.Instance.DCuploader.transform.GetChild(2).GetComponent<DataCapsule>().ChangeMode(3);
+        }
+        
         countdownText.gameObject.SetActive(true);
         ResetProgressBar();
     }

@@ -16,6 +16,7 @@ public class PowerPlantController : MonoBehaviour
 
     public AudioClip sound1;
     public AudioClip sound2;
+    public AudioClip sound3;
 
     public AudioSource audioSource;
 
@@ -45,7 +46,7 @@ public class PowerPlantController : MonoBehaviour
     void Update()
     {
          if(!isInDeadZone){
-            power -= 0.003f;
+            power -= 0.001f;
             arrow.transform.eulerAngles = new Vector3(
                 arrow.transform.eulerAngles.x,
                 arrow.transform.eulerAngles.y,
@@ -56,7 +57,7 @@ public class PowerPlantController : MonoBehaviour
 
         if (!isInDeadZone)
         {
-            if (power < minPower + 6 || power > maxPower - 6)
+            if (power < minPower + 6 || power > maxPower - 15)
             {
                 if (!isInWarningZone)
                 {
@@ -98,9 +99,12 @@ public class PowerPlantController : MonoBehaviour
             }
         }else if(power <= -59.8f){ //nuclear reactor fell asleep - yeah, you can't restart it (such a skill issue)
             power = 0;
+            audioSource.clip = sound3;
+            audioSource.Play();
             isInDeadZone = true;
             rotateCoroutine = StartCoroutine(RotateArrowToTarget(180));
             isInWarningZone = false;
+            GameController.Instance.killGenerator();
             GameObject.Find("MASTER gameobject").GetComponent<GameController>().SwitchAllLights(false); //Also turn all electricity off
             if (audioSource.isPlaying && audioSource.clip == sound1)
             {

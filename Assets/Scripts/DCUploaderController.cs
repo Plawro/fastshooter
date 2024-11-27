@@ -5,15 +5,30 @@ using UnityEngine;
 public class DCUploaderController : MonoBehaviour
 {
     public Vector3 capsulePos;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+    Transform currentCapsule;
+
+    public string CheckCapsule(){
+        if(this.transform.childCount > 2){
+            currentCapsule = this.transform.GetChild(2);
+            return(currentCapsule.name);
+        }else{
+            return("Empty");
+        }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+    public int CheckCapsuleMode(){
+        if(this.transform.childCount > 2){
+            return currentCapsule.transform.GetComponent<DataCapsule>().mode;
+        }else{
+            return(10);
+        }
+    }
+
+    public void CapsuleUploading(){
+        currentCapsule.transform.GetComponent<DataCapsule>().ChangeMode(1);
+    }
+
+    public void CapsuleFinished(){
+        currentCapsule.transform.GetComponent<DataCapsule>().ChangeMode(2);
     }
 }
