@@ -111,8 +111,8 @@ public class DoorController : MonoBehaviour
 
         while (Vector3.Distance(door1.transform.position, targetPos1) > 0.01f)
         {
-            door1.transform.position = Vector3.Lerp(door1.transform.position, targetPos1, Time.deltaTime * 2);
-            door2.transform.position = Vector3.Lerp(door2.transform.position, targetPos2, Time.deltaTime * 2);
+            door1.transform.position = Vector3.Lerp(door1.transform.position, targetPos1, Time.deltaTime * 5);
+            door2.transform.position = Vector3.Lerp(door2.transform.position, targetPos2, Time.deltaTime * 5);
             yield return null;
         }
     }
@@ -121,8 +121,8 @@ public class DoorController : MonoBehaviour
     {
         while (Vector3.Distance(door1.transform.position, startPos1) > 0.01f)
         {
-            door1.transform.position = Vector3.Lerp(door1.transform.position, startPos1, Time.deltaTime * 2);
-            door2.transform.position = Vector3.Lerp(door2.transform.position, startPos2, Time.deltaTime * 2);
+            door1.transform.position = Vector3.Lerp(door1.transform.position, startPos1, Time.deltaTime * 5);
+            door2.transform.position = Vector3.Lerp(door2.transform.position, startPos2, Time.deltaTime * 5);
             yield return null;
         }
     }

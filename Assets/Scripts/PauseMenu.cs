@@ -3,18 +3,30 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Audio;
+using TMPro;
+using UnityEditor.ProjectWindowCallback;
 
 public class PauseMenu : MonoBehaviour
 {
     public GameObject pauseMenu;
-    public static bool isPaused = false;
+    public bool isPaused = false;
     public AudioSource soundSource;
     public AudioClip pause;
 
     [SerializeField] AudioMixer audioMixer;
+
+    public static string endMessage = "End message";
+    public TextMeshProUGUI endText;
+    public bool canBePaused;
+    public GameObject loadingMenu;
+    public TextMeshProUGUI loadingText;
+    Coroutine blinkImage;
+    bool alreadyBlinking;
     void Start()
     {
-        pauseMenu.SetActive(false);
+        loadingMenu.SetActive(false);
+        pauseMenu.SetActive(isPaused);
+        endText.text = endMessage;
         SetMasterVolume(16);
         SetAmbientVolume(16);
         SetSFXVolume(16);
@@ -26,22 +38,85 @@ public class PauseMenu : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Escape)){
             ChangePauseMode();
         }
+
+        if(endMessage == "DEAD"){
+            if(blinkImage == null && !alreadyBlinking){
+                alreadyBlinking = true;
+                blinkImage = StartCoroutine(BlinkImage());
+            }
+        }
     }
 
     public void ChangePauseMode(){
-        soundSource.PlayOneShot(pause);
-        if(isPaused){
+        if(canBePaused){
+            soundSource.PlayOneShot(pause);
+            if(isPaused){
                 ResumeGame();
             }else{
                 PauseGame();
+            }
         }
     }
+
+    public void StartGame(){
+        StartCoroutine(LoadScene("Game"));
+    }
+
+
+    public IEnumerator LoadScene(string name){
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName:name);
+        operation.allowSceneActivation = false;
+        loadingMenu.SetActive(true);
+        while(!operation.isDone){
+             if (operation.progress < 0.9f)
+            {
+                loadingText.text = "LOADING... " + (operation.progress * 100f).ToString("F0") + "%";
+            }
+            else
+            {
+                if (Input.anyKeyDown)
+                {
+                    operation.allowSceneActivation = true;
+                }
+                loadingText.text = "Press any key to continue";
+            }
+            yield return null;
+
+
+
+            /*
+            float progress = Mathf.Clamp01(operation.progress * 100);
+
+            loadingText.text = progress.ToString() + " %";
+
+            yield return null;*/
+        }
+    }
+    
+    public void TheEnd(string endMessageGot){
+        endMessage = endMessageGot;
+        endText.text = endMessage;
+        SceneManager.LoadScene (sceneName:"TheEnd");
+    }
+
+    public GameObject skullImage;
+
+    private IEnumerator BlinkImage()
+    {
+        while(true){
+            skullImage.SetActive(!skullImage.activeSelf);
+            yield return new WaitForSeconds(1.4f);
+        }
+    }
+
     void PauseGame(){
-        pauseMenu.SetActive(true);
-        Time.timeScale = 0f;
-        isPaused = true;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true; 
+        if(canBePaused){
+            pauseMenu.SetActive(true);
+            Time.timeScale = 0f;
+            isPaused = true;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true; 
+        }
     }
 
     void ResumeGame(){

@@ -13,6 +13,7 @@ public class AmbientController : MonoBehaviour
     public bool isOtherPlaying = false; // Stop ambient when chasing, ... music is playing
     private Coroutine currentFadeRoutine;
     private bool previousIsOtherPlaying = false;
+    public Material skyboxMaterial;
 
     void Start()
     {
@@ -57,16 +58,32 @@ private void OnTriggerExit(Collider other)
 
 
     private void Update()
-{
-    if(isIndoors){ // When something is waiting outside, spawn it after player has full fog, otherwise player can see it!
-        if(RenderSettings.fogDensity >= 0.01){
-            RenderSettings.fogDensity -= Time.deltaTime /20;
+    {
+        if (isIndoors)
+        {
+            if (RenderSettings.fogDensity > 0.04f)
+            {
+                RenderSettings.fogDensity -= Time.deltaTime / 30;
+
+                float transitionProgress = Mathf.InverseLerp(0.07f, 0.04f, RenderSettings.fogDensity);
+                RenderSettings.fogColor = Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), Color.black, transitionProgress);
+
+                skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), new Color(20 / 255f, 20 / 255f, 20 / 255f), transitionProgress));
+            }
         }
-    }else{
-        if(RenderSettings.fogDensity <= 0.06){
-            RenderSettings.fogDensity += Time.deltaTime /20;
+        else
+        {
+            if (RenderSettings.fogDensity < 0.07f)
+            {
+                RenderSettings.fogDensity += Time.deltaTime / 5;
+
+                float transitionProgress = Mathf.InverseLerp(0.04f, 0.07f, RenderSettings.fogDensity);
+                RenderSettings.fogColor = Color.Lerp(Color.black, new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress);
+
+                skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(20 / 255f, 20 / 255f, 20 / 255f), new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress));
+            }
         }
-    }
+
         
 
     if (isOtherPlaying != previousIsOtherPlaying)

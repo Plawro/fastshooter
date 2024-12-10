@@ -37,7 +37,7 @@ public class PlayerInteractions : MonoBehaviour
     Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
     RaycastHit hit;
 
-    if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer))
+    if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && GameController.Instance.IsGamePaused() == false)
     {
         if (hit.transform.CompareTag("Interactable") && hit.transform.name != "DoubleSlideDoor") // Doors may be interactable, but automatical doors may cause problems :( and don't need interaction
         {
@@ -105,12 +105,14 @@ public class PlayerInteractions : MonoBehaviour
                 if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
                     leftHand.GetChild(0).transform.parent = hit.transform;
                     hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos; // First 2 childs are model parts
+                    hit.transform.GetChild(2).transform.localRotation = new Quaternion(0,0,0,0);
                     hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
                 }
 
                 if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
                     rightHand.GetChild(0).transform.parent = hit.transform;
                     hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos;
+                    hit.transform.GetChild(2).transform.localRotation = new Quaternion(0,0,0,0);
                     hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
                 }
                 
@@ -164,6 +166,7 @@ public class PlayerInteractions : MonoBehaviour
                 if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount < 1){
                     hit.transform.position = leftHand.position;
                     hit.transform.parent = leftHand;
+                    leftHand.transform.GetChild(0).localRotation = new Quaternion(0,180,0,0);
                     if(leftHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ //Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
                         leftHand.GetChild(0).transform.GetComponent<DataCapsule>().ChangeMode(3);
                     }
@@ -176,6 +179,7 @@ public class PlayerInteractions : MonoBehaviour
                 if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount < 1){
                     hit.transform.position = rightHand.position;
                     hit.transform.parent = rightHand;
+                    rightHand.transform.GetChild(0).localRotation = new Quaternion(0,180,0,0);
                     if(rightHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ //Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
                         rightHand.GetChild(0).transform.GetComponent<DataCapsule>().ChangeMode(3);
                     }
@@ -219,7 +223,7 @@ public class PlayerInteractions : MonoBehaviour
 }
 
 
-    void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
+    public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
         //camPosSave = mainCamera.transform.position;
         if (activeVirtualCamera != null)
@@ -239,7 +243,20 @@ public class PlayerInteractions : MonoBehaviour
         
     }
 
-    void SwitchToMainCamera()
+    Vector3 lastKnownCamPos;
+    public void SaveLastKnownCameraPos(){
+        lastKnownCamPos = activeVirtualCamera.transform.position;
+    }
+
+    //Shaking camera function (jumpscare)
+    public IEnumerator ShakeCamera(float ammount){
+        while(activeVirtualCamera != null){
+            activeVirtualCamera.transform.position = lastKnownCamPos + Random.insideUnitSphere * ammount;
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    public void SwitchToMainCamera()
     {
         if (activeVirtualCamera != null)
         {

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PowerPlantController : MonoBehaviour
 {
@@ -28,11 +29,45 @@ public class PowerPlantController : MonoBehaviour
     bool isInDeadZone = false;
 
     private Coroutine rotateCoroutine;
+    public float heat;
+    float maxHeat = 100;
+    public FollowerController enemyCont;
+    public RawImage[] progressBarImages;
+    float heatBarAmmount;
+    bool enabledBar = false;
+
+    private IEnumerator BlinkBar()
+    {
+        while (true) // Blink on and off, refreshing the progress bar
+        {
+            heatBarAmmount = Mathf.Clamp(heat/20-1+0.25f, 0, progressBarImages.Length - 1);
+
+            if(enabledBar){
+                foreach (RawImage img in progressBarImages)
+                {
+                    img.gameObject.SetActive(false);
+                }
+
+                enabledBar = false;
+            }else{
+                // Activate all images up to the current index to create a filling effect (should look good)
+                for (int i = 0; i <= heatBarAmmount; i++)
+                {
+                    progressBarImages[i].gameObject.SetActive(true);
+                }
+
+                enabledBar = true;
+            }
+
+            yield return new WaitForSeconds(1.4f);
+        }
+    }
 
     
     void Start()
     {
         skullImage.gameObject.SetActive(false);
+        StartCoroutine(BlinkBar());
     }
 
 
@@ -44,20 +79,26 @@ public class PowerPlantController : MonoBehaviour
     }*/
 
     void Update()
-    {
+    {   
+        if(!GameController.Instance.IsGamePaused()){
+        enemyCont.Charge((power+60)/2400);
+        if (!isInDeadZone){
+            if(power > 0){
+                heat += (power+60)/36000;
+            }else if (heat >= 0){
+                heat -= 0.001f;
+            }
+        }
+
          if(!isInDeadZone){
-            power -= 0.001f;
+            power -= 0.003f;
             arrow.transform.eulerAngles = new Vector3(
                 arrow.transform.eulerAngles.x,
                 arrow.transform.eulerAngles.y,
                 power
             );
-         }
-        
-
-        if (!isInDeadZone)
-        {
-            if (power < minPower + 6 || power > maxPower - 15)
+         
+            if (power < minPower + 6 || power > maxPower - 6)
             {
                 if (!isInWarningZone)
                 {
@@ -75,8 +116,8 @@ public class PowerPlantController : MonoBehaviour
                 if (audioSource.clip == sound1) audioSource.Stop();
             }
         }
-
-        if (power >= 59.8f) //overclocked
+        }
+        if (power >= 60.5f || heat > maxHeat) //overclocked
         {
             if (!isInDeadZone)
             {
@@ -97,14 +138,14 @@ public class PowerPlantController : MonoBehaviour
 
                 isInWarningZone = false;
             }
-        }else if(power <= -59.8f){ //nuclear reactor fell asleep - yeah, you can't restart it (such a skill issue)
+        }else if(power <= -60.5f){ //nuclear reactor fell asleep - yeah, you can't restart it (such a skill issue)
             power = 0;
             audioSource.clip = sound3;
             audioSource.Play();
             isInDeadZone = true;
             rotateCoroutine = StartCoroutine(RotateArrowToTarget(180));
             isInWarningZone = false;
-            GameController.Instance.killGenerator();
+            GameController.Instance.KillGenerator();
             GameObject.Find("MASTER gameobject").GetComponent<GameController>().SwitchAllLights(false); //Also turn all electricity off
             if (audioSource.isPlaying && audioSource.clip == sound1)
             {
@@ -115,7 +156,7 @@ public class PowerPlantController : MonoBehaviour
     }
 
     public void AddPower(float ammount){
-        if(!isInDeadZone){
+        if(!isInDeadZone && !GameController.Instance.IsGamePaused()){
         if(ammount == 1){
             power += 0.03f + Mathf.Clamp((power + 60) * 0.001f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);

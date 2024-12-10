@@ -157,7 +157,7 @@ public class PlayerController : MonoBehaviour
         // Camera rotation (and body rotation)
         rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
         rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-        if(canMove && !PauseMenu.isPaused){
+        if(canMove && !GameController.Instance.IsGamePaused()){
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
@@ -168,7 +168,7 @@ public class PlayerController : MonoBehaviour
             RenderSettings.fogDensity -= Time.deltaTime /20;
         }
         */
-
+        
 
 
 
@@ -300,5 +300,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
         }
 
     }
+
+    
 
 }
