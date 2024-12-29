@@ -79,6 +79,10 @@ public class GameController : MonoBehaviour
         }
     }
 
+    void Update(){
+
+    }
+
     public bool IsGamePaused(){
         return pauseMenu.isPaused;
     }

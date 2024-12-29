@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Audio;
 using TMPro;
-using UnityEditor.ProjectWindowCallback;
 
 public class PauseMenu : MonoBehaviour
 {
@@ -35,7 +34,7 @@ public class PauseMenu : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Escape)){
+        if(Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)){
             ChangePauseMode();
         }
 

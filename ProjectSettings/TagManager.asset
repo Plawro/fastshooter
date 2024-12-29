@@ -9,6 +9,7 @@ TagManager:
   - PreInteractable
   - Door
   - ItemHolder
+  - StationCenter
   layers:
   - Default
   - TransparentFX

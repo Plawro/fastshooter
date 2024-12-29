@@ -24,6 +24,7 @@ public class DriftController : MonoBehaviour
     public AudioClip footstepSound;
     public AudioClip runningFootstepSound;
     public AudioClip jumpscareSound;
+    public AudioClip outsidePlayerSound;
 
     private Vector3 patrolTarget;
     private bool isPatrolling = true;
@@ -31,10 +32,16 @@ public class DriftController : MonoBehaviour
 
     public float patrolRadius = 10f;
     public Vector3 spawnPoint;
+    private Coroutine distanceCheckCoroutine;
+    private bool playerOutOfBoundaries = false;
+    [SerializeField] Transform stationCenter;
+    float timer = 0;
+    float timer2;
 
     void Start()
     {
         player = GameObject.FindWithTag("Player").transform;
+        stationCenter = GameObject.FindWithTag("StationCenter").transform;
         navAgent = GetComponent<NavMeshAgent>();
         navAgent.speed = walkSpeed;
         navAgent.updateRotation = true;
@@ -46,9 +53,44 @@ public class DriftController : MonoBehaviour
 
     void Update()
     {
+        if(playerOutOfBoundaries){
+            timer += Time.deltaTime;
+        }else{
+            timer = 0;
+        }
         UpdateState();
         HandleMovement();
         UpdateAnimation();
+        distanceCheckCoroutine = StartCoroutine(CheckPlayerDistance());
+    }
+
+
+    private IEnumerator CheckPlayerDistance()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(2f);
+            float distance = Vector3.Distance(player.position, stationCenter.position);
+            if (distance > 150){
+                if(playerOutOfBoundaries == false && timer == 0){
+                    musicAudioSource.PlayOneShot(outsidePlayerSound);
+                }
+                playerOutOfBoundaries = true;
+            }
+            else{
+                afterGoBackTimer();
+            }
+        }
+    }
+
+    void afterGoBackTimer(){
+        if(playerOutOfBoundaries){
+            timer2 += Time.deltaTime;
+            if(timer2 > 10){
+                playerOutOfBoundaries = false;
+                timer2 = 0;
+            }
+        }
     }
 
     void UpdateState()
@@ -59,7 +101,7 @@ public class DriftController : MonoBehaviour
 
     void HandleMovement()
     {
-        if (isPlayerInSight)
+        if (isPlayerInSight || playerOutOfBoundaries)
         {
             wasChasing = true;
             isPatrolling = false;
@@ -96,8 +138,7 @@ public class DriftController : MonoBehaviour
 
         if (velocityMagnitude > 0.1f)
         {
-            anim.SetInteger("walkMode", navAgent.speed > walkSpeed ? 3 : 2);
-
+            anim.SetInteger("walkMode", 2);
             if (!footstepAudioSource.isPlaying)
             {
                 footstepAudioSource.clip = navAgent.speed > walkSpeed ? runningFootstepSound : footstepSound;

@@ -55,7 +55,7 @@ public class PlayerController : MonoBehaviour
     Vector3 restPosition;
     float bobSpeed = 10f;
     float defaultCameraY;
-    Vector3 newPosition = new Vector3(0,0.7f,0);
+    Vector3 newPosition = new Vector3(0,1f,0);
     private bool playAtLowPoint = true;
     private float lastFootstepTime = 0f;
 
@@ -70,8 +70,8 @@ public class PlayerController : MonoBehaviour
 
     void Start() // Prepares character for the game
     {
-        defaultCameraY = 0.7f;
-        playerCamera.transform.localPosition = new Vector3(0, 0.7f, 0);
+        defaultCameraY = 0.8f;
+        playerCamera.transform.localPosition = new Vector3(0, 0.8f, 0);
         walkSpeed = defWalkSpeed;
         runSpeed = defRunSpeed;
         characterController = GetComponent<CharacterController>();
@@ -204,7 +204,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                 smoothSpeed * Time.deltaTime * 3
             );
         } else { // Move the camera back when on ground
-            newPosition.y = 0.7f + Mathf.Abs((Mathf.Sin(timer) * bobAmount));
+            newPosition.y = 0.8f + Mathf.Abs((Mathf.Sin(timer) * bobAmount));
             playerCamera.transform.localPosition = Vector3.Lerp(
                 playerCamera.transform.localPosition,
                 new Vector3(
@@ -285,7 +285,7 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                     playerCamera.transform.localPosition,
                     new Vector3(
                         0,//playerCamera.transform.localPosition.x,
-                        0.7531425f,//newPosition.y,
+                        0.8f,//newPosition.y,
                         0//playerCamera.transform.localPosition.z
                     ),
                     smoothSpeed * 2 * Time.deltaTime

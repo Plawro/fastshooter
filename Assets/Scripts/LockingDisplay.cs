@@ -83,7 +83,7 @@ public class LockingDisplay : MonoBehaviour
 
         if (isLocked) return;
 
-        if (RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null))
+        if (RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null) && targetFrequency.gameObject.activeSelf)
         {
             if (lockingCoroutine == null)
                 lockingCoroutine = StartCoroutine(LockingProcess());
