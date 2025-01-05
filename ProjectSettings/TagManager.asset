@@ -28,7 +28,7 @@ TagManager:
   - Screen
   - Door
   - Item
-  - 
+  - Inventory
   - Volume
   - IgnoreRaycast
   - 

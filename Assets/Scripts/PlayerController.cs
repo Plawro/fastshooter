@@ -300,7 +300,4 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
         }
 
     }
-
-    
-
 }

@@ -58,7 +58,7 @@ public class PauseMenu : MonoBehaviour
     }
 
     public void StartGame(){
-        StartCoroutine(LoadScene("Game"));
+        StartCoroutine(LoadScene("Game1 1"));
     }
 
 

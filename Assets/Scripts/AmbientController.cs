@@ -25,7 +25,21 @@ public class AmbientController : MonoBehaviour
 
     private int indoorsCollidersTouched = 0;  // Track how many indoor colliders are touched
 
+    public void SetOutside()
+    {
+        isIndoors = false;
+        if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
+        currentFadeRoutine = StartCoroutine(FadeToOutdoor());
+    }
 
+
+    public void SetInside(){
+        isIndoors = true;
+            if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
+            currentFadeRoutine = StartCoroutine(FadeToIndoor());
+    }
+
+/*
 private void OnTriggerEnter(Collider other)
 {
     if (other.CompareTag("Player") && !isOtherPlaying)
@@ -55,17 +69,17 @@ private void OnTriggerExit(Collider other)
     }
 
 }
+*/
 
-
-    private void Update()
+    public void Update()
     {
         if (isIndoors)
         {
-            if (RenderSettings.fogDensity > 0.04f)
+            if (RenderSettings.fogDensity > 0.055f)
             {
-                RenderSettings.fogDensity -= Time.deltaTime / 30;
+                RenderSettings.fogDensity -= Time.deltaTime;
 
-                float transitionProgress = Mathf.InverseLerp(0.07f, 0.04f, RenderSettings.fogDensity);
+                float transitionProgress = Mathf.InverseLerp(0.07f, 0.055f, RenderSettings.fogDensity);
                 RenderSettings.fogColor = Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), Color.black, transitionProgress);
 
                 skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), new Color(20 / 255f, 20 / 255f, 20 / 255f), transitionProgress));
@@ -75,9 +89,9 @@ private void OnTriggerExit(Collider other)
         {
             if (RenderSettings.fogDensity < 0.07f)
             {
-                RenderSettings.fogDensity += Time.deltaTime / 5;
+                RenderSettings.fogDensity += Time.deltaTime;
 
-                float transitionProgress = Mathf.InverseLerp(0.04f, 0.07f, RenderSettings.fogDensity);
+                float transitionProgress = Mathf.InverseLerp(0.055f, 0.07f, RenderSettings.fogDensity);
                 RenderSettings.fogColor = Color.Lerp(Color.black, new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress);
 
                 skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(20 / 255f, 20 / 255f, 20 / 255f), new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress));
@@ -85,7 +99,7 @@ private void OnTriggerExit(Collider other)
         }
 
         
-
+/*
     if (isOtherPlaying != previousIsOtherPlaying)
     {
         previousIsOtherPlaying = isOtherPlaying;
@@ -99,16 +113,18 @@ private void OnTriggerExit(Collider other)
         {
             if (isIndoors)
             {
+                print("indoor");
                 if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
                 currentFadeRoutine = StartCoroutine(FadeToIndoor());
             }
             else
             {
+                print("outdoor");
                 if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
                 currentFadeRoutine = StartCoroutine(FadeToOutdoor());
             }
         }
-    }
+    }*/
 }
 
     private IEnumerator FadeToIndoor()

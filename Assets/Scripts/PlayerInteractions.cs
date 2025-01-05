@@ -14,7 +14,6 @@ public class PlayerInteractions : MonoBehaviour
     public Camera mainCamera;
     public float lookDistance = 5f;
 
-    private CinemachineVirtualCamera activeVirtualCamera;
     private bool isUsingVirtualCamera = false;
 
     public LayerMask ignoreLayer;
@@ -37,6 +36,7 @@ public class PlayerInteractions : MonoBehaviour
     Ray ray = mainCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
     RaycastHit hit;
 
+    
     if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && GameController.Instance.IsGamePaused() == false)
     {
         if (hit.transform.CompareTag("Interactable") && hit.transform.name != "DoubleSlideDoor") // Doors may be interactable, but automatical doors may cause problems :( and don't need interaction
@@ -194,6 +194,7 @@ public class PlayerInteractions : MonoBehaviour
         {
             //crosshair.color = Color.white;
             crosshairText = crosshairSymbol;
+            if (crosshair.text != crosshairText) 
             crosshair.text = crosshairText;
         }
     }
@@ -201,6 +202,7 @@ public class PlayerInteractions : MonoBehaviour
     {
         //crosshair.color = Color.white;
         crosshairText = crosshairSymbol;
+        if (crosshair.text != crosshairText) 
         crosshair.text = crosshairText;
     }
 
@@ -223,16 +225,23 @@ public class PlayerInteractions : MonoBehaviour
 }
 
 
+    private void OnTriggerEnter(Collider other){
+        if(other == GameController.Instance.walkInsideCollider){
+            GameController.Instance.SwitchModeHallway(true);
+        }
+    }
+
+
     public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
         //camPosSave = mainCamera.transform.position;
-        if (activeVirtualCamera != null)
+        if (GameController.Instance.activeVirtualCamera != null)
         {
-            activeVirtualCamera.gameObject.SetActive(false);
+            GameController.Instance.activeVirtualCamera.gameObject.SetActive(false);
         }
 
-        activeVirtualCamera = vCam;
-        activeVirtualCamera.gameObject.SetActive(true);
+        GameController.Instance.activeVirtualCamera = vCam;
+        GameController.Instance.activeVirtualCamera.gameObject.SetActive(true);
         isUsingVirtualCamera = true;
 
         
@@ -245,24 +254,24 @@ public class PlayerInteractions : MonoBehaviour
 
     Vector3 lastKnownCamPos;
     public void SaveLastKnownCameraPos(){
-        lastKnownCamPos = activeVirtualCamera.transform.position;
+        lastKnownCamPos = GameController.Instance.activeVirtualCamera.transform.position;
     }
 
     //Shaking camera function (jumpscare)
     public IEnumerator ShakeCamera(float ammount){
-        while(activeVirtualCamera != null){
-            activeVirtualCamera.transform.position = lastKnownCamPos + Random.insideUnitSphere * ammount;
+        while(GameController.Instance.activeVirtualCamera != null){
+            GameController.Instance.activeVirtualCamera.transform.position = lastKnownCamPos + Random.insideUnitSphere * ammount;
             yield return new WaitForSeconds(0.1f);
         }
     }
 
     public void SwitchToMainCamera()
     {
-        if (activeVirtualCamera != null)
+        if (GameController.Instance.activeVirtualCamera != null)
         {
-            activeVirtualCamera.gameObject.SetActive(false);
+            GameController.Instance.activeVirtualCamera.gameObject.SetActive(false);
         }
-        activeVirtualCamera = null;
+        GameController.Instance.activeVirtualCamera = null;
         isUsingVirtualCamera = false;
        // mainCamera.transform.position = camPosSave;
 
