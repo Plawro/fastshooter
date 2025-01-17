@@ -18,7 +18,7 @@ public class CameraPowerPlantController : MonoBehaviour
     private float targetOffset = 0;  // Target offset for smooth transition
 
 
-    public PowerPlantController powerPlantController;
+    [SerializeField] PowerPlantController powerPlantController;
     public Camera mainCamera;
     public float lookDistance = 5f;
 
@@ -35,6 +35,7 @@ public class CameraPowerPlantController : MonoBehaviour
 
 
     [SerializeField] CinemachineVirtualCamera powerPlantCam;
+    [SerializeField] CinemachineVirtualCamera surveillanceCam;
 
     void OnEnable(){
         targetOffset = 0;
@@ -60,31 +61,31 @@ public class CameraPowerPlantController : MonoBehaviour
 
     void Update()
     {
+        crosshair.transform.position = new Vector2(Input.mousePosition.x + 100,Input.mousePosition.y - 50);
         // Check for "look back" key (S)
         //if (Input.GetKeyDown(KeyCode.S))
         //{
             //targetOffset = targetOffset == 0 ? 180 : 0; // Toggle between 0 and 180 degrees
         //}
 
-        // Smoothly transition rotation offset
-        rotationOffset = Mathf.Lerp(rotationOffset, targetOffset, Time.deltaTime * smoothing);
+        // Get cursor position as a percentage of the screen
+        Vector2 cursorPosition = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
 
-        // Get mouse input
-        Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")) * sensitivity;
+        // Invert cursor mapping to make movement intuitive
+        float invertedX = cursorPosition.x;
+        float invertedY = 1f - cursorPosition.y;
 
-        // Update target rotation based on mouse input
-        targetRotation.x = Mathf.Clamp(targetRotation.x + mouseInput.x, horizontalClamp.x, horizontalClamp.y);
-        targetRotation.y = Mathf.Clamp(targetRotation.y - mouseInput.y, verticalClamp.x, verticalClamp.y);
+        // Map cursor position to rotation range, adding targetOffset for additional rotation
+        targetRotation.x = Mathf.Lerp(horizontalClamp.x, horizontalClamp.y, invertedX) + targetOffset;
+        targetRotation.y = Mathf.Lerp(verticalClamp.x, verticalClamp.y, invertedY);
 
         // Smoothly interpolate to the target rotation
         currentRotation = Vector2.Lerp(currentRotation, targetRotation, Time.deltaTime * smoothing);
 
-        // Apply rotation to the camera with the offset
-        virtualCamera.transform.localRotation = Quaternion.Euler(currentRotation.y, currentRotation.x + rotationOffset, 0);
-
+        // Apply rotation to the camera
+        virtualCamera.transform.localRotation = Quaternion.Euler(currentRotation.y, currentRotation.x, 0);
 
         // KEYBOARD MODE
-        
         if(targetOffset == 0){
         if(nowInteractingWith == ""){
         if(Input.GetKeyDown(KeyCode.W)){
@@ -93,6 +94,15 @@ public class CameraPowerPlantController : MonoBehaviour
             crosshair.enabled = false;
             nowInteractingWith = "PowerPlantDisplay";
             SwitchToVirtualCamera(powerPlantCam);
+        }
+
+
+        if(Input.GetKeyDown(KeyCode.D)){
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            crosshair.enabled = false;
+            nowInteractingWith = "SurveillanceDisplay";
+            SwitchToVirtualCamera(surveillanceCam);
         }
 
         if(Input.GetKeyDown(KeyCode.S)){
@@ -142,7 +152,6 @@ public class CameraPowerPlantController : MonoBehaviour
                     {
                         if (hit.transform.name == "PowerPlantDisplay")
                         {
-                            powerPlantController = hit.transform.parent.GetComponent<PowerPlantController>();
                             nowInteractingWith = "PowerPlantDisplay";
                         }else if(hit.transform.name == "ControlPanel"){
                             nowInteractingWith = "ControlPanel";
@@ -161,7 +170,7 @@ public class CameraPowerPlantController : MonoBehaviour
             ResetCrosshair();
         }
 
-        if (isUsingVirtualCamera && powerPlantController != null && nowInteractingWith == "PowerPlantDisplay")
+        if (isUsingVirtualCamera && nowInteractingWith == "PowerPlantDisplay")
         {
             HandlePowerPlantControl();
         }
@@ -209,7 +218,6 @@ public class CameraPowerPlantController : MonoBehaviour
         GameController.Instance.activeVirtualCamera.gameObject.SetActive(true);
         isUsingVirtualCamera = false;
        // mainCamera.transform.position = camPosSave;
-        powerPlantController = null;
     }
 
     public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)

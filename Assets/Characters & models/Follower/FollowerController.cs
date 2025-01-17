@@ -75,7 +75,7 @@ public class FollowerController : MonoBehaviour
         if (isIdling)
         {
             charge += ammount;
-            chargeText.text = charge.ToString("F1");
+            chargeText.text = charge.ToString("F1") + " %";
             
 
             if (charge >= 100)

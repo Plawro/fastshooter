@@ -63,6 +63,8 @@ public class GameController : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject); // Keep the GameManager across scenes (woah)
+
+        playerCamera.transform.localRotation = Quaternion.Euler(-7,0,0); // Set camera rotation on start
     }
 
 
