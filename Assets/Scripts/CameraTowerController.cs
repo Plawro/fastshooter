@@ -64,7 +64,7 @@ public class CameraTowerController : MonoBehaviour
 
     void Update()
     {
-        crosshair.transform.position = new Vector2(Input.mousePosition.x + 100,Input.mousePosition.y - 50);
+        crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 50);
         // Check for "look back" key (S)
         //if (Input.GetKeyDown(KeyCode.S))
         //{
@@ -95,7 +95,7 @@ public class CameraTowerController : MonoBehaviour
         if(nowInteractingWith == ""){
 
         
-        if(Input.GetKeyDown(KeyCode.W)){
+        if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             crosshair.enabled = false;
@@ -103,7 +103,7 @@ public class CameraTowerController : MonoBehaviour
             SwitchToVirtualCamera(lockingCam);
         }
 
-        if(Input.GetKeyDown(KeyCode.A)){
+        if(Input.GetKeyDown(KeyCode.A) && GameController.Instance.canMove){
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             crosshair.enabled = false;
@@ -111,15 +111,15 @@ public class CameraTowerController : MonoBehaviour
             SwitchToVirtualCamera(statsCam);
         }
 
-        if(Input.GetKeyDown(KeyCode.D)){
+        if(Input.GetKeyDown(KeyCode.D) && GameController.Instance.canMove){
 
         }
-        if(Input.GetKeyDown(KeyCode.S)){
+        if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
                 targetOffset = 0;
             }
 
         }else{
-            if(Input.GetKeyDown(KeyCode.S)){
+            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
                 SwitchToMainCamera();
                 nowInteractingWith = "";
                 Cursor.lockState = CursorLockMode.None;
@@ -127,11 +127,11 @@ public class CameraTowerController : MonoBehaviour
                 crosshair.enabled = true;
             }
         }}else{
-            if(Input.GetKeyDown(KeyCode.W)){
+            if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
                 GameController.Instance.SwitchModeHallway(true);
             }
             
-            if(Input.GetKeyDown(KeyCode.S)){
+            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
                 targetOffset = -180;
             }
         }
@@ -179,9 +179,6 @@ public class CameraTowerController : MonoBehaviour
                         SwitchToVirtualCamera(foundCamera);
                     }
                 }
-            }else if (hit.transform.name == "powerswitch")
-            {
-                HandlePowerSwitch(hit);
             }
             else if (hit.transform.name == "DC uploader")
             {
@@ -233,30 +230,6 @@ public class CameraTowerController : MonoBehaviour
                     AssignInteraction(hit.transform.name, foundCamera);
                 }
             }
-        }
-    }
-
-    void HandlePowerSwitch(RaycastHit hit)
-    {
-        var towerController = hit.transform.parent.GetComponent<TowerController>();
-
-        if (towerController.isAntennaBroken)
-        {
-            crosshairText = "Hold to turn tower on";
-            crosshair.text = crosshairText;
-
-            if (Input.GetKey(KeyCode.E))
-                towerController.RepairAntenna();
-            else
-                towerController.StopRepairingAntenna();
-        }
-        else
-        {
-            crosshairText = "Turn tower off";
-            crosshair.text = crosshairText;
-
-            if (Input.GetKeyDown(KeyCode.E))
-                statsScreen.BreakAntenna();
         }
     }
 
@@ -324,6 +297,7 @@ public class CameraTowerController : MonoBehaviour
 
     void PickupObject(Transform obj, Transform hand)
     {
+        print("yes");
         obj.position = hand.position;
         obj.parent = hand;
         obj.localRotation = Quaternion.Euler(0, 180, 0);

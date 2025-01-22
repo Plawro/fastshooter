@@ -84,7 +84,7 @@ public class PowerPlantController : MonoBehaviour
         enemyCont.Charge((power+60)/2400);
         if (!isInDeadZone){
             if(power > 0){
-                heat += (power+60)/36000;
+                heat += (power+60)/30000;
             }else if (heat >= 0){
                 heat -= 0.001f;
             }

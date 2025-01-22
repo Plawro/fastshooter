@@ -3,14 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+[System.Serializable]
+public class MarkerData
+{
+    public Transform marker;     // Waypoint transform
+    public GameObject uiPrefab;  // Specific UI prefab for this waypoint
+}
+
 public class ControlWaypoints : MonoBehaviour
 {
-    public Camera mainCamera; // Assign the player's camera
-    public GameObject uiPrefab; // The UI element prefab
-    public List<Transform> markers; // List of world-space markers
-    public Canvas canvas; // Your canvas (set in Screen Space - Camera)
-    public float parallaxStrength = 5f; // Parallax effect strength
-    float proximityThreshold = 1f; // Distance threshold to change text
+    public Camera mainCamera;                 // Assign the player's camera
+    public Canvas canvas;                     // Your canvas (set in Screen Space - Camera)
+    public List<MarkerData> markers;          // List of markers and their prefabs
+    public float parallaxStrength = 5f;       // Parallax effect strength
+    public float proximityThreshold = 1f;     // Distance threshold to change text
 
     private List<GameObject> uiElements = new List<GameObject>();
     private RectTransform canvasRect;
@@ -25,33 +31,36 @@ public class ControlWaypoints : MonoBehaviour
         initialCameraPosition = mainCamera.transform.position;
 
         // Instantiate UI elements for each marker
-        foreach (Transform marker in markers)
+        foreach (MarkerData data in markers)
         {
-            GameObject uiElement = Instantiate(uiPrefab, canvas.transform);
+            if (data.marker == null || data.uiPrefab == null)
+                continue;
+
+            GameObject uiElement = Instantiate(data.uiPrefab, canvas.transform);
             uiElements.Add(uiElement);
 
             // Set the child TextMeshPro text to the marker's name
             TextMeshProUGUI textComponent = uiElement.GetComponentInChildren<TextMeshProUGUI>();
             if (textComponent != null)
             {
-                textComponent.text = marker.name; // Set text to marker's name
+                textComponent.text = data.marker.name; // Set text to marker's name
             }
         }
     }
 
-    void LateUpdate()
+    void FixedUpdate()
     {
         // Update each UI element to match its marker
         for (int i = 0; i < markers.Count; i++)
         {
-            Transform marker = markers[i];
+            MarkerData data = markers[i];
             GameObject uiElement = uiElements[i];
 
-            if (marker == null || uiElement == null)
+            if (data.marker == null || uiElement == null)
                 continue;
 
             // Convert world position to screen position
-            Vector3 screenPosition = mainCamera.WorldToScreenPoint(marker.position);
+            Vector3 screenPosition = mainCamera.WorldToScreenPoint(data.marker.position);
 
             // Check if the marker is in front of the camera
             if (screenPosition.z > 0)
@@ -60,7 +69,7 @@ public class ControlWaypoints : MonoBehaviour
 
                 // Convert screen position to canvas position
                 RectTransform rectTransform = uiElement.GetComponent<RectTransform>();
-                Vector2 viewportPosition = mainCamera.WorldToViewportPoint(marker.position);
+                Vector2 viewportPosition = mainCamera.WorldToViewportPoint(data.marker.position);
                 Vector2 canvasPosition = new Vector2(
                     (viewportPosition.x * canvasRect.sizeDelta.x) - (canvasRect.sizeDelta.x * 0.5f),
                     (viewportPosition.y * canvasRect.sizeDelta.y) - (canvasRect.sizeDelta.y * 0.5f)
@@ -74,7 +83,7 @@ public class ControlWaypoints : MonoBehaviour
                 rectTransform.anchoredPosition = canvasPosition + parallaxEffect;
 
                 // Change text based on proximity
-                float distanceToMarker = Vector3.Distance(mainCamera.transform.position, marker.position);
+                float distanceToMarker = Vector3.Distance(mainCamera.transform.position, data.marker.position);
                 TextMeshProUGUI textComponent = uiElement.GetComponentInChildren<TextMeshProUGUI>();
                 if (textComponent != null)
                 {
@@ -84,7 +93,7 @@ public class ControlWaypoints : MonoBehaviour
                     }
                     else
                     {
-                        textComponent.text = marker.name; // Far from the marker
+                        textComponent.text = data.marker.name; // Far from the marker
                     }
                 }
             }

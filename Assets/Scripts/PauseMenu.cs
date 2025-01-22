@@ -126,7 +126,13 @@ public class PauseMenu : MonoBehaviour
         Cursor.visible = false; 
     }
 
+    public void Restart(){
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
     public void MainMenu(){
+        isPaused = false;
+        pauseMenu.SetActive(false);
         Time.timeScale = 1f;
         SceneManager.LoadScene("MainMenu");
     }

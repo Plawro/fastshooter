@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 using TMPro;
+using Unity.VisualScripting;
 
 public class CameraControlPanelController : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class CameraControlPanelController : MonoBehaviour
     [SerializeField] private float smoothing = 8.0f;
     [SerializeField] private Vector2 horizontalClamp = new Vector2(-60, 60);
     [SerializeField] private Vector2 verticalClamp = new Vector2(-80, 80);
+    [SerializeField] private GameObject flashLight;
 
     private Vector2 targetRotation;
     private Vector2 currentRotation;
@@ -31,11 +33,14 @@ public class CameraControlPanelController : MonoBehaviour
     [SerializeField] Transform inventory;
     [SerializeField] Transform leftHand;
     [SerializeField] Transform rightHand;
+    Coroutine flashCoroutine;
 
     public string nowInteractingWith = "";
 
 
     [SerializeField] CinemachineVirtualCamera controlPanelCam;
+    [SerializeField] Drift driftController;
+    
 
     void OnEnable(){
         targetOffset = -90;
@@ -54,14 +59,14 @@ public class CameraControlPanelController : MonoBehaviour
         targetRotation = Vector2.zero;
 
         crosshair.gameObject.SetActive(true);
-        crosshair.text = GameController.Instance.crosshairSymbol;
+        crosshair.text = "";
 
         nowInteractingWith = "";
     }
 
     void Update()
     {
-        crosshair.transform.position = new Vector2(Input.mousePosition.x + 100,Input.mousePosition.y - 50);
+        crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 50);
         // Check for "look back" key (S)
         //if (Input.GetKeyDown(KeyCode.S))
         //{
@@ -91,31 +96,36 @@ public class CameraControlPanelController : MonoBehaviour
         if(nowInteractingWith == ""){
 
             if(targetOffset == 0 || targetOffset == -180){
-                if(Input.GetKeyDown(KeyCode.W)){
+                if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
                     targetOffset = -90;
                 }
             }else{
-                if(Input.GetKeyDown(KeyCode.W)){
+                if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
                     nowInteractingWith = "ControlPanel";
                     SwitchToVirtualCamera(controlPanelCam);
                 }
             }
 
-
-        if(Input.GetKeyDown(KeyCode.D)){
-            targetOffset = 0;
+        if(Input.GetKeyDown(KeyCode.D) && GameController.Instance.canMove && flashCoroutine == null){
+            if((leftHand.childCount > 0 && leftHand.GetChild(0).name == "Flash") | (rightHand.childCount > 0 && rightHand.GetChild(0).name == "Flash")){
+                targetOffset = 0;
+                flashCoroutine = StartCoroutine(Flash(0));
+            }
         }
 
-        if(Input.GetKeyDown(KeyCode.A)){
-            targetOffset = -180;
+        if(Input.GetKeyDown(KeyCode.A) && GameController.Instance.canMove && flashCoroutine == null){
+            if((leftHand.childCount > 0 && leftHand.GetChild(0).name == "Flash") | (rightHand.childCount > 0 && rightHand.GetChild(0).name == "Flash")){
+                targetOffset = -180;
+                flashCoroutine = StartCoroutine(Flash(-180));
+            }
         }
 
-        if(Input.GetKeyDown(KeyCode.S)){
+        if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove && flashCoroutine == null){
                 targetOffset = 90;
             }
 
         }else{
-            if(Input.GetKeyDown(KeyCode.S)){
+            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove && flashCoroutine == null){
                 SwitchToMainCamera();
                 nowInteractingWith = "";
                 Cursor.lockState = CursorLockMode.None;
@@ -123,11 +133,11 @@ public class CameraControlPanelController : MonoBehaviour
                 crosshair.enabled = true;
             }
         }}else{
-            if(Input.GetKey(KeyCode.W)){
+            if(Input.GetKey(KeyCode.W) && GameController.Instance.canMove && flashCoroutine == null){
                 GameController.Instance.SwitchModeHallway(true);
             }
 
-            if(Input.GetKeyDown(KeyCode.S)){
+            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove && flashCoroutine == null){
                 targetOffset = -90;
             }
         }
@@ -138,7 +148,6 @@ public class CameraControlPanelController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
         {
-            print(hit.transform.name);
             if(hit.transform.name == "ControlPanelCapsuleHolder"){
                     if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
                         crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into control panel";
@@ -210,6 +219,23 @@ public class CameraControlPanelController : MonoBehaviour
     {
         crosshairText = ""; // No interaction text
         crosshair.text = crosshairText;
+    }
+
+    IEnumerator Flash(int rotation){
+        yield return new WaitForSeconds(0.2f);
+        flashLight.SetActive(true);
+        driftController.Flash(rotation);
+        yield return new WaitForSeconds(0.4f);
+        flashLight.SetActive(false);
+        yield return new WaitForSeconds(0.3f);
+        targetOffset = -90;
+        flashCoroutine = null;
+        if(leftHand.childCount > 0 && leftHand.GetChild(0).name == "Flash"){
+            Destroy(leftHand.GetChild(0).gameObject);
+        }else if(rightHand.childCount > 0 && rightHand.GetChild(0).name == "Flash"){
+            Destroy(rightHand.GetChild(0).gameObject);
+        }
+        yield return null;
     }
 
 

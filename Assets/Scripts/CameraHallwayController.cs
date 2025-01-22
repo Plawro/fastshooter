@@ -61,7 +61,7 @@ public class CameraHallwayController : MonoBehaviour
 
     void Update()
     {
-        crosshair.transform.position = new Vector2(Input.mousePosition.x + 100,Input.mousePosition.y - 50);
+        crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 50);
         // Check for "look back" key (S)
         //if (Input.GetKeyDown(KeyCode.S))
         //{
@@ -91,24 +91,24 @@ public class CameraHallwayController : MonoBehaviour
         if(nowInteractingWith == ""){
 
         
-        if(Input.GetKeyDown(KeyCode.W)){
+        if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
             GameController.Instance.SwitchModeOutside();
         }
 
-        if(Input.GetKeyDown(KeyCode.A)){
+        if(Input.GetKeyDown(KeyCode.A) && GameController.Instance.canMove){
             GameController.Instance.SwitchModeTower();
         }
 
-        if(Input.GetKeyDown(KeyCode.D)){
+        if(Input.GetKeyDown(KeyCode.D) && GameController.Instance.canMove){
             GameController.Instance.SwitchModePowerPlant();
         }
 
-        if(Input.GetKeyDown(KeyCode.S)){
+        if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
                 targetOffset = 90;
             }
 
         }else{
-            if(Input.GetKeyDown(KeyCode.S)){
+            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
                 SwitchToMainCamera();
                 nowInteractingWith = "";
                 Cursor.lockState = CursorLockMode.None;
@@ -116,19 +116,19 @@ public class CameraHallwayController : MonoBehaviour
                 crosshair.enabled = true;
             }
         }}else{
-            if(Input.GetKey(KeyCode.W)){
+            if(Input.GetKey(KeyCode.W) && GameController.Instance.canMove){
                 GameController.Instance.SwitchModeControlPanel();
             }
 
-            if(Input.GetKeyDown(KeyCode.A)){
+            if(Input.GetKeyDown(KeyCode.A) && GameController.Instance.canMove){
             GameController.Instance.SwitchModePowerPlant();
             }
 
-            if(Input.GetKeyDown(KeyCode.D)){
+            if(Input.GetKeyDown(KeyCode.D) && GameController.Instance.canMove){
                 GameController.Instance.SwitchModeTower();
             }
 
-            if(Input.GetKeyDown(KeyCode.S)){
+            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
                 targetOffset = -90;
             }
         }

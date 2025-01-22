@@ -49,8 +49,11 @@ public class GameController : MonoBehaviour
     [SerializeField] Transform inventory;
     private Vector3 inventoryOffset = new Vector3(-0.7f,-0.7f,1.25f);
     [SerializeField] AmbientController ambient;
+    public bool canMove;
 
-    
+    void Start(){
+        canMove = true;
+    }
 
     void Awake()
     {
@@ -256,20 +259,21 @@ public class GameController : MonoBehaviour
 
 
     public CanvasGroup fadeCanvasGroup; // Fading image CanvasGroup
-    public float fadeDuration = 0.5f;   // Duration of fade in/out for out/in
+    float fadeDuration = 0.2f;   // Duration of fade in/out for out/in
 
     public IEnumerator FadeOut()
     {
         float startAlpha = fadeCanvasGroup.alpha;
         float timer = 0;
-
+        canMove = false;
+        
         while (timer < fadeDuration)
         {
             fadeCanvasGroup.alpha = Mathf.Lerp(startAlpha, 1, timer / fadeDuration);
             timer += Time.deltaTime;
             yield return null;
         }
-
+        
         fadeCanvasGroup.alpha = 1; // Ensure it's fully opaque
     }
 
@@ -277,6 +281,7 @@ public class GameController : MonoBehaviour
     {
         float startAlpha = fadeCanvasGroup.alpha;
         float timer = 0;
+        
 
         while (timer < fadeDuration)
         {
@@ -285,6 +290,7 @@ public class GameController : MonoBehaviour
             yield return null;
         }
 
+        canMove = true;
         fadeCanvasGroup.alpha = 0; // Ensure it's fully transparent
     }
 
