@@ -20,7 +20,7 @@ public class FollowerController : MonoBehaviour
     private float attackRange = 1.2f; // How far does enemy attack ("Arm length")
 
     private float walkSpeed = 3.5f; // Walking speed, used for patrolling
-    private float runSpeed = 9f; // Run speed, used for chasing
+    private float runSpeed = 8.5f; // Run speed, used for chasing
 
     public bool isPlayerInSight, isPlayerInAttackRange;
     public bool wasChasing = false; // If returning to patrol mode, helps to determine if searching for player is next step
@@ -92,6 +92,7 @@ public class FollowerController : MonoBehaviour
 
     void Update()
     {
+        print(agent.speed);
         if (isWaitingToPatrol)
         {
             patrolWaitTimer -= Time.deltaTime;
@@ -107,6 +108,7 @@ public class FollowerController : MonoBehaviour
         {
             isWaitingToPatrol = false; // Stop waiting if player is spotted again
             Chase();
+            agent.speed = runSpeed;
         }
 
         if (Input.GetKeyDown(KeyCode.O))  // Used for Debug to manually start a patrol
@@ -192,16 +194,14 @@ public class FollowerController : MonoBehaviour
         {
             anim.SetInteger("walkMode", 1); // Standing/idle animation
         }
-
+        agent.speed = runSpeed;
         NavMeshHit hit;
         if (NavMesh.SamplePosition(player.position, out hit, 1.0f, NavMesh.AllAreas)) // Checking if player is still on the NavMesh
         {
-            agent.speed = runSpeed;
             agent.SetDestination(player.position);
         }
         else
         {
-            agent.speed = walkSpeed;
             agent.SetDestination(lastKnownPosition); // Go to last known position
             StartWaitBeforePatrol(); // Start the patrol delay timer
             //Debug.Log("Player out of NavMesh - waiting at last position.");

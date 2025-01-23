@@ -23,6 +23,10 @@ public class PauseMenu : MonoBehaviour
     bool alreadyBlinking;
     void Start()
     {
+        if(SceneManager.GetActiveScene().name != "Game1 1"){
+            Destroy(GameObject.Find("MASTER gameobject"));
+        }
+
         loadingMenu.SetActive(false);
         pauseMenu.SetActive(isPaused);
         endText.text = endMessage;
@@ -127,7 +131,7 @@ public class PauseMenu : MonoBehaviour
     }
 
     public void Restart(){
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene("Game1 1");
     }
 
     public void MainMenu(){

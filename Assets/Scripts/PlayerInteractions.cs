@@ -56,21 +56,6 @@ public class PlayerInteractions : MonoBehaviour
                         nowInteractingWith = "";
                         SwitchToMainCamera();
                     }
-                    else
-                    {
-                        if (hit.transform.name == "PowerPlantDisplay")
-                        {
-                            powerPlantController = hit.transform.parent.GetComponent<PowerPlantController>();
-                            nowInteractingWith = "PowerPlantDisplay";
-                        }else if(hit.transform.name == "LockingDisplay"){
-                            nowInteractingWith = "LockingDisplay";
-                        }else if(hit.transform.name == "StatsScreen"){
-                            nowInteractingWith = "StatsScreen";
-                        }else if(hit.transform.name == "ControlPanel"){
-                            nowInteractingWith = "ControlPanel";
-                        }
-                        SwitchToVirtualCamera(foundCamera);
-                    }
                 }
                 
 
@@ -92,62 +77,6 @@ public class PlayerInteractions : MonoBehaviour
                         statsScreen.BreakAntenna();
                     }
                 }
-            }else if(hit.transform.name == "DC uploader"){
-                if(Input.GetKeyDown(KeyCode.E)){
-                    Debug.Log("Activated");
-                }
-
-                if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty") || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty")){
-                    crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " in Uploader";
-                    crosshair.text = crosshairText;
-                }
-                
-                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
-                    leftHand.GetChild(0).transform.parent = hit.transform;
-                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos; // First 2 childs are model parts
-                    hit.transform.GetChild(2).transform.localRotation = new Quaternion(0,0,0,0);
-                    hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
-                }
-
-                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
-                    rightHand.GetChild(0).transform.parent = hit.transform;
-                    hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos;
-                    hit.transform.GetChild(2).transform.localRotation = new Quaternion(0,0,0,0);
-                    hit.transform.GetComponent<DCUploaderController>().CheckCapsule();
-                }
-                
-            }else if(hit.transform.name == "DataCapsuleBasket"){
-                if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
-                    crosshairText = "Throw " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into trash";
-                    crosshair.text = crosshairText;
-                }
-                
-                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
-                    Destroy(leftHand.GetChild(0).gameObject);
-                }
-
-                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
-                    Destroy(rightHand.GetChild(0).gameObject);
-                }
-                
-            }else if(hit.transform.name == "ControlPanelCapsuleHolder"){
-                if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
-                    crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into control panel";
-                    crosshair.text = crosshairText;
-                }
-                
-                if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
-                    leftHand.GetChild(0).transform.parent = hit.transform;
-                    hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
-                    hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
-                }
-
-                if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
-                    rightHand.GetChild(0).transform.parent = hit.transform;
-                    hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
-                    hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
-                }
-                
             }else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null){ // Any interactable door, to fix "curtain bug" - add option for doorcontroller and istrigger collider on main object - when opened
                                                                             //for example, player doesnt need to look at the object (side of curtains where the collider is) but in the centre where will always be one collider
                 crosshairText = hit.transform.parent.GetComponent<DoorController>().isOpen ? "Close" : "Open";
@@ -206,22 +135,6 @@ public class PlayerInteractions : MonoBehaviour
         crosshair.text = crosshairText;
     }
 
-    if (isUsingVirtualCamera && powerPlantController != null && nowInteractingWith == "PowerPlantDisplay")
-    {
-        if (Input.GetKey(KeyCode.A))
-        {
-            powerPlantController.AddPower(-1f);
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            powerPlantController.AddPower(1f);
-        }
-    }
-
-    if (isUsingVirtualCamera && nowInteractingWith == "ControlPanel")
-    {
-        
-    }
 }
 
 
