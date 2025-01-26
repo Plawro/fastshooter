@@ -17,7 +17,7 @@ public class FollowerController : MonoBehaviour
     [SerializeField] public LayerMask obstacleMask;
 
     private float sightRange = 25f; // How far does enemy see
-    private float attackRange = 1.2f; // How far does enemy attack ("Arm length")
+    private float attackRange = 2f; // How far does enemy attack ("Arm length")
 
     private float walkSpeed = 3.5f; // Walking speed, used for patrolling
     private float runSpeed = 8.5f; // Run speed, used for chasing
@@ -27,6 +27,8 @@ public class FollowerController : MonoBehaviour
     public bool isSearching = false; // Helps to know what is happening right now
     public bool isIdling = true; // Helps to know what is happening right now
     public bool isPatrolling = false;// Helps to know what is happening right now
+    public bool isChasing = false;
+    bool isAttacking = false;
 
     private Vector3 lastKnownPosition; // Saving players position for better chasing experience
     private float idleTimer = 0f; // "Where is he" effect timer when enemy loses player out of sight
@@ -46,6 +48,7 @@ public class FollowerController : MonoBehaviour
 
     public float charge;
     public TextMeshProUGUI chargeText;
+    Coroutine waitingCoroutine;
 
 
     void Start()
@@ -64,6 +67,7 @@ public class FollowerController : MonoBehaviour
         isPatrolling = false;
         chaseMemoryTimer = 0f;
 
+        InvokeRepeating(nameof(CheckPlayerDetection), 0f, 0.2f);
         IdleInf(); // Start in idle
     }
 
@@ -75,25 +79,103 @@ public class FollowerController : MonoBehaviour
         if (isIdling)
         {
             charge += ammount;
-            chargeText.text = charge.ToString("F1") + " %";
+            chargeText.text = $"{charge:F1}%";
             
 
             if (charge >= 100)
             {
                 isIdling = false;
                 charge = 0;
-                chargeText.text = charge.ToString("F1");
+                chargeText.text = "NULL";
                 isPatrolling = true;
                 current = 0;
             }
         }
     }
 
+    void CheckPlayerDetection()
+{
+    
+
+        if ((isPlayerInSight | Vector3.Distance(this.gameObject.transform.position,player.transform.position) < 4) && isPatrolling)
+        {
+            waitingCoroutine=null;
+            isPatrolling = false;
+            isChasing = true;
+            Chase();
+            agent.speed = runSpeed;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))  // Used for Debug to manually start a patrol
+        {
+            isPatrolling = !isPatrolling; // Start/stop patrolling (stop = stops in current position)
+            current = 0;  // Start from the first point
+            wasChasing = false;  // Reset chasing state
+            isSearching = false; // Reset searching state
+            isIdling = false;    // Reset idling state
+        }
+
+    // Check player sight and attack range
+    isPlayerInSight = Physics.CheckSphere(transform.position, sightRange, playerLayer) && CanSeePlayer();
+    isPlayerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
+
+    if (isPlayerInSight && isChasing)
+    {
+        lastKnownPosition = player.position; // Update last seen position
+        chaseMemoryTimer = 0f; // Reset chase memory timer
+
+        if (isPlayerInAttackRange)
+        {
+            Attack();
+        }
+        else
+        {
+            if (!musicAudioSource.isPlaying || musicAudioSource.clip == findingSound)
+            {
+                StartCoroutine(FadeOutAndIn(chasingSound));
+            }
+            isPatrolling = false;
+            isChasing = true;
+            Chase();
+        }
+    }
+    else if (chaseMemoryTimer < 2f && wasChasing)
+    {
+        chaseMemoryTimer += 0.2f; // Increment based on detection interval
+
+        if (!musicAudioSource.isPlaying || musicAudioSource.clip == findingSound)
+        {
+            StartCoroutine(FadeOutAndIn(chasingSound));
+        }
+        isPatrolling = false;
+        isChasing = true;
+        Chase();
+    }
+    else if (wasChasing)
+    {
+        if (!musicAudioSource.isPlaying || musicAudioSource.clip == chasingSound)
+        {
+            StartCoroutine(FadeOut(findingSound));
+        }
+
+        Predict();
+    }
+    else if (isSearching)
+    {
+        Search();
+    }
+    else if (isIdling)
+    {
+        Idle();
+    }else if(isPatrolling){
+        Patrol();
+    }
+}
+
 
     void Update()
     {
-        print(agent.speed);
-        if (isWaitingToPatrol)
+        /*if (isWaitingToPatrol)
         {
             patrolWaitTimer -= Time.deltaTime;
             if (patrolWaitTimer <= 0)
@@ -104,14 +186,14 @@ public class FollowerController : MonoBehaviour
             }
         }
 
-        if (isPlayerInSight)
+        if (isPlayerInSight && isPatrolling)
         {
             isWaitingToPatrol = false; // Stop waiting if player is spotted again
             Chase();
             agent.speed = runSpeed;
         }
 
-        if (Input.GetKeyDown(KeyCode.O))  // Used for Debug to manually start a patrol
+        if (Input.GetKeyDown(KeyCode.Alpha2))  // Used for Debug to manually start a patrol
         {
             isPatrolling = !isPatrolling; // Start/stop patrolling (stop = stops in current position)
             current = 0;  // Start from the first point
@@ -121,7 +203,7 @@ public class FollowerController : MonoBehaviour
         }
 
         // Check player sight and attack range
-        isPlayerInSight = Physics.CheckSphere(transform.position, sightRange, playerLayer) && CanSeePlayer();
+        //isPlayerInSight = Physics.CheckSphere(transform.position, sightRange, playerLayer) && CanSeePlayer();
         isPlayerInAttackRange = Physics.CheckSphere(transform.position, attackRange, playerLayer);
 
         if(!GameController.Instance.IsGamePaused()){
@@ -172,7 +254,7 @@ public class FollowerController : MonoBehaviour
         {
             Patrol();
         }
-        }
+        }*/
     }
 
     void Chase()
@@ -182,8 +264,6 @@ public class FollowerController : MonoBehaviour
         }
         
         wasChasing = true;
-        isSearching = false;
-        isIdling = false;
 
         // Chase animation
         if (agent.velocity.sqrMagnitude > 0.5f) 
@@ -195,23 +275,22 @@ public class FollowerController : MonoBehaviour
             anim.SetInteger("walkMode", 1); // Standing/idle animation
         }
         agent.speed = runSpeed;
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(player.position, out hit, 1.0f, NavMesh.AllAreas)) // Checking if player is still on the NavMesh
+        if (isPlayerInSight) // Checking if player is still on the NavMesh
         {
             agent.SetDestination(player.position);
         }
         else
         {
             agent.SetDestination(lastKnownPosition); // Go to last known position
-            StartWaitBeforePatrol(); // Start the patrol delay timer
+            waitingCoroutine = StartCoroutine(WaitBeforePatrol()); // Start the patrol delay timer
             //Debug.Log("Player out of NavMesh - waiting at last position.");
         }
     }
 
-    void StartWaitBeforePatrol()
-    {
-        isWaitingToPatrol = true;
-        patrolWaitTimer = waitBeforePatrol; // Set timer to wait before returning to patrol
+    IEnumerator WaitBeforePatrol(){
+        yield return new WaitForSeconds(3);
+        isPatrolling = true;
+        Patrol();
     }
 
     void Attack()
@@ -220,19 +299,22 @@ public class FollowerController : MonoBehaviour
         anim.SetInteger("walkMode", 5);
         agent.SetDestination(transform.position);
         footstepAudioSource.volume = 0;
-        if(musicAudioSource.isPlaying){
-            StartCoroutine(FadeOutAndStop());
+        if(musicAudioSource.isPlaying && !isAttacking){
+            musicAudioSource.Stop();
+            isAttacking = true;
         }
-        musicAudioSource.PlayOneShot(jumpscareSound);
+        if(!musicAudioSource.isPlaying){
+            musicAudioSource.PlayOneShot(jumpscareSound);
+        }
         GameController.Instance.Jumpscare("Follower");
+    }
+
+    public void PlayFootstep(){
+        footstepAudioSource.PlayOneShot(footstepSound);
     }
 
     void Predict()
     {
-        if(!footstepAudioSource.isPlaying){
-            footstepAudioSource.PlayOneShot(runningFootstepSound);
-        }
-
         predictTimer += Time.deltaTime;
 
         if (agent.velocity.sqrMagnitude > 0.1f) // Determine if enemy is actually moving
@@ -247,20 +329,17 @@ public class FollowerController : MonoBehaviour
         agent.speed = runSpeed;
         agent.SetDestination(lastKnownPosition);
 
-        if (predictTimer >= 4f) // Predict for 4 seconds
+        if (predictTimer >= 0.3f) // Predict for 4 seconds
         {
             predictTimer = 0;
             wasChasing = false;
+            isSearching = true;
             Search();
         }
     }
 
     void Search()
     {
-        if(!footstepAudioSource.isPlaying){
-            footstepAudioSource.PlayOneShot(footstepSound);
-        }
-
         if(!musicAudioSource.isPlaying && musicAudioSource.clip == chasingSound){
             musicAudioSource.clip = findingSound;
             musicAudioSource.Play();
@@ -270,14 +349,12 @@ public class FollowerController : MonoBehaviour
         agent.speed = runSpeed;
         agent.SetDestination(lastKnownPosition);
         anim.SetInteger("walkMode", 2); // Walking animation
-        if(!footstepAudioSource.isPlaying){
-            footstepAudioSource.PlayOneShot(footstepSound);
-        }
 
         if (Vector3.Distance(transform.position, lastKnownPosition) <= 2)
         {
             isSearching = false;
-            StartIdle();
+            isPatrolling = true;
+            Patrol();
         }
     }
 
@@ -323,6 +400,16 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
         }
         musicAudioSource.volume = 1;
     }
+    private IEnumerator FadeOut(AudioClip newClip)
+    {
+        yield return new WaitForSeconds(5);
+        for (float t = 0; t < 0.5f; t += Time.deltaTime)
+        {
+            musicAudioSource.volume = Mathf.Lerp(1, 0, t / 0.5f);
+            yield return null;
+        }
+        musicAudioSource.volume = 0;
+    }
 
     private IEnumerator FadeOutAndStop()
     {
@@ -331,8 +418,8 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
             musicAudioSource.volume = Mathf.Lerp(1, 0, t / 2);
             yield return null;
         }
-        musicAudioSource.volume = 0;
         musicAudioSource.Stop();
+        musicAudioSource.volume = 1;
     }
 
     void Idle() //FIX
@@ -348,6 +435,7 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
             //isIdling = false;
             if (isPatrolling)
             {
+                isPatrolling = true;
                 Patrol(); // Resume patrolling if enabled
             }
         }
@@ -356,9 +444,6 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
     void Patrol()
     {
         anim.SetInteger("walkMode", 2);
-        if(!footstepAudioSource.isPlaying){
-            footstepAudioSource.PlayOneShot(footstepSound);
-        }
         agent.speed = walkSpeed;
         lastKnownPosition = player.position; // This shouldn't be here, but let's make it fun
         if (points.Length == 0) return;
@@ -372,7 +457,7 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
 
         agent.SetDestination(points[current].position);
 
-        if (!agent.pathPending && agent.remainingDistance <= 0.5f)
+        if (!agent.pathPending && agent.remainingDistance <= 1f)
         {
             current++;
             if (current >= points.Length)
@@ -427,4 +512,4 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
         }
         return index;
     }
-}
+}  

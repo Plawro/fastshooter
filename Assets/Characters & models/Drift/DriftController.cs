@@ -78,12 +78,12 @@ public class DriftController : MonoBehaviour
                 playerOutOfBoundaries = true;
             }
             else{
-                afterGoBackTimer();
+                AfterGoBackTimer();
             }
         }
     }
 
-    void afterGoBackTimer(){
+    void AfterGoBackTimer(){
         if(playerOutOfBoundaries){
             timer2 += Time.deltaTime;
             if(timer2 > 10){
@@ -177,7 +177,7 @@ public class DriftController : MonoBehaviour
         navAgent.velocity = Vector3.zero;
         navAgent.angularSpeed = 0;
 
-        GameController.Instance.jumpscareCameraDrift = this.transform.Find("Virtual Camera").GetComponent<CinemachineVirtualCamera>();
+        GameController.Instance.jumpscareCameraDrift1 = this.transform.Find("Virtual Camera").GetComponent<CinemachineVirtualCamera>();
         GameController.Instance.Jumpscare("Drift");
     }
 

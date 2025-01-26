@@ -23,7 +23,8 @@ public class GameController : MonoBehaviour
 
     [Header("Jumpscare related")]
     public CinemachineVirtualCamera jumpscareCameraFollower;
-    public CinemachineVirtualCamera jumpscareCameraDrift;
+    public CinemachineVirtualCamera jumpscareCameraDrift1;
+    public CinemachineVirtualCamera jumpscareCameraDrift2;
     public CinemachineBrain cameraBrain;
     bool wasJumpscared = false;
     bool isSceneLoading = false;
@@ -307,14 +308,22 @@ public class GameController : MonoBehaviour
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
             StartCoroutine(EndJumpscare());
-        }else if(enemyName == "Drift" && !wasJumpscared){
+        }else if(enemyName == "Drift1" && !wasJumpscared){
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
-            playerInteractions.SwitchToVirtualCamera(jumpscareCameraDrift);
+            playerInteractions.SwitchToVirtualCamera(jumpscareCameraDrift1);
             playerInteractions.SaveLastKnownCameraPos();
             StartCoroutine(playerInteractions.ShakeCamera(0.02f));
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
             StartCoroutine(EndJumpscare());
+        }else if(enemyName == "Drift2" && !wasJumpscared){
+            cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
+            playerInteractions.SwitchToVirtualCamera(jumpscareCameraDrift2);
+            playerInteractions.SaveLastKnownCameraPos();
+            StartCoroutine(playerInteractions.ShakeCamera(0.02f));
+            cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
+            cameraBrain.m_DefaultBlend.m_Time = 0.4f;
+            StartCoroutine(EndJumpscare()); 
         }
     }
 

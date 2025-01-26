@@ -9,6 +9,8 @@ public class Drift : MonoBehaviour
     public SurveillanceScreen surveillanceScreen;
     [SerializeField] GameObject playerObject;
     Coroutine currentCoroutine;
+    [SerializeField] AudioClip jumpscareSound;
+    [SerializeField] AudioSource musicAudioSource;
 
     [SerializeField] GameObject leftDrift;
     [SerializeField] GameObject rightDrift;
@@ -97,7 +99,14 @@ IEnumerator PlayerDetected(){
     while(playerObject.activeSelf){
         timer += 1;
         if(timer >= 10){
-            print("DEAD");
+            if(!musicAudioSource.isPlaying){
+                musicAudioSource.PlayOneShot(jumpscareSound);
+            }
+            if(enemyPosition == 0){
+                GameController.Instance.Jumpscare("Drift1");
+            }else{
+                GameController.Instance.Jumpscare("Drift2");
+            }
         }
         yield return new WaitForSeconds(0.5f);
     }

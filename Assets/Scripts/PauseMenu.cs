@@ -21,6 +21,7 @@ public class PauseMenu : MonoBehaviour
     public TextMeshProUGUI loadingText;
     Coroutine blinkImage;
     bool alreadyBlinking;
+    [SerializeField] GameObject playerObject;
     void Start()
     {
         if(SceneManager.GetActiveScene().name != "Game1 1"){
@@ -126,8 +127,13 @@ public class PauseMenu : MonoBehaviour
         pauseMenu.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false; 
+        if(playerObject.activeSelf){
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }else{
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        } 
     }
 
     public void Restart(){
