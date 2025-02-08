@@ -140,29 +140,7 @@ public class CameraHallwayController : MonoBehaviour
         if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
         {
             CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
-            if (foundCamera != null)
-            {
-                string crosshairText = "Use";
-                crosshair.text = crosshairText;
-                if(Input.GetKeyDown(KeyCode.E) | Input.GetKeyDown(KeyCode.Mouse0)){
-                    
-                    if (nowInteractingWith != "")
-                    {
-                        nowInteractingWith = "";
-                        SwitchToMainCamera();
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                        crosshair.enabled = true;
-                    }
-                    else
-                    {
-                        if(hit.transform.name == "ControlPanel"){
-                            nowInteractingWith = "ControlPanel";
-                        }
-                        SwitchToVirtualCamera(foundCamera);
-                    }
-                }
-            }else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null)
+            if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null)
             {
                 HandleDoorInteraction(hit);
             }

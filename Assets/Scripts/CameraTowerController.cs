@@ -96,18 +96,14 @@ public class CameraTowerController : MonoBehaviour
 
         
         if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            crosshair.enabled = false;
             nowInteractingWith = "LockingDisplay";
+            GameController.Instance.exitScreenButton.SetActive(true);
             SwitchToVirtualCamera(lockingCam);
         }
 
         if(Input.GetKeyDown(KeyCode.A) && GameController.Instance.canMove){
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            crosshair.enabled = false;
             nowInteractingWith = "StatsScreen";
+            GameController.Instance.exitScreenButton.SetActive(true);
             SwitchToVirtualCamera(statsCam);
         }
 
@@ -118,15 +114,9 @@ public class CameraTowerController : MonoBehaviour
                 targetOffset = 0;
             }
 
+        }
+        
         }else{
-            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
-                SwitchToMainCamera();
-                nowInteractingWith = "";
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                crosshair.enabled = true;
-            }
-        }}else{
             if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
                 GameController.Instance.SwitchModeHallway(true);
             }
@@ -143,44 +133,7 @@ public class CameraTowerController : MonoBehaviour
         if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
         {
             CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
-            if (foundCamera != null)
-            {
-                string crosshairText = "Use";
-                crosshair.text = crosshairText;
-                if(Input.GetKeyDown(KeyCode.E) | Input.GetKeyDown(KeyCode.Mouse0)){
-                    
-                    if (nowInteractingWith != "")
-                    {
-                        nowInteractingWith = "";
-                        SwitchToMainCamera();
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                        crosshair.enabled = true;
-                    }
-                    else
-                    {
-                        if (hit.transform.name == "PowerPlantDisplay")
-                        {
-                            powerPlantController = hit.transform.parent.GetComponent<PowerPlantController>();
-                            nowInteractingWith = "PowerPlantDisplay";
-                        }else if(hit.transform.name == "LockingDisplay"){
-                            Cursor.lockState = CursorLockMode.Locked;
-                             Cursor.visible = false;
-                            crosshair.enabled = false;
-                            nowInteractingWith = "LockingDisplay";
-                        }else if(hit.transform.name == "StatsScreen"){
-                            Cursor.lockState = CursorLockMode.Locked;
-                             Cursor.visible = false;
-                            crosshair.enabled = false;
-                            nowInteractingWith = "StatsScreen";
-                        }else if(hit.transform.name == "ControlPanel"){
-                            nowInteractingWith = "ControlPanel";
-                        }
-                        SwitchToVirtualCamera(foundCamera);
-                    }
-                }
-            }
-            else if (hit.transform.name == "DC uploader")
+            if (hit.transform.name == "DC uploader")
             {
                 HandleDCUploader(hit);
             }
@@ -188,13 +141,11 @@ public class CameraTowerController : MonoBehaviour
             {
                 HandleDataCapsuleBasket(hit);
             }
-            else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null)
-            {
-                HandleDoorInteraction(hit);
-            }
-            else if(hit.transform.CompareTag("Interactable"))
+            else if(hit.transform.CompareTag("Interactable") && (hit.transform.name == "Datacapsule" || hit.transform.name == "Flashlight"))
             {
                 HandlePickupable(hit);
+            }else{
+                ResetCrosshair();
             }
         }
         else
@@ -273,12 +224,6 @@ public class CameraTowerController : MonoBehaviour
                 }
     }
 
-
-    void HandleDoorInteraction(RaycastHit hit)
-    {
-        crosshairText = "Go";
-        crosshair.text = crosshairText;
-    }
 
     void HandlePickupable(RaycastHit hit)
     {

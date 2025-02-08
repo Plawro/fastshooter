@@ -89,19 +89,15 @@ public class CameraPowerPlantController : MonoBehaviour
         if(targetOffset == 0){
         if(nowInteractingWith == ""){
         if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            crosshair.enabled = false;
             nowInteractingWith = "PowerPlantDisplay";
+            GameController.Instance.exitScreenButton.SetActive(true);
             SwitchToVirtualCamera(powerPlantCam);
         }
 
 
         if(Input.GetKeyDown(KeyCode.D) && GameController.Instance.canMove){
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            crosshair.enabled = false;
             nowInteractingWith = "SurveillanceDisplay";
+            GameController.Instance.exitScreenButton.SetActive(true);
             SwitchToVirtualCamera(surveillanceCam);
         }
 
@@ -109,15 +105,8 @@ public class CameraPowerPlantController : MonoBehaviour
                 targetOffset = -180;
             }
 
+        }
         }else{
-            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){
-                SwitchToMainCamera();
-                nowInteractingWith = "";
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                crosshair.enabled = true;
-            }
-        }}else{
             if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
                 GameController.Instance.SwitchModeHallway(true);
             }
@@ -130,57 +119,13 @@ public class CameraPowerPlantController : MonoBehaviour
         // MOUSE MODE
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
-        {
-            CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
-            if (foundCamera != null)
-            {
-                string crosshairText = "Use";
-                crosshair.text = crosshairText;
-                if(Input.GetKeyDown(KeyCode.E) | Input.GetKeyDown(KeyCode.Mouse0)){
-                    
-                    if (nowInteractingWith != "")
-                    {
-                        nowInteractingWith = "";
-                        SwitchToMainCamera();
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                        crosshair.enabled = true;
-                    }
-                    else
-                    {
-                        if (hit.transform.name == "PowerPlantDisplay")
-                        {
-                            nowInteractingWith = "PowerPlantDisplay";
-                        }else if(hit.transform.name == "ControlPanel"){
-                            nowInteractingWith = "ControlPanel";
-                        }
-                        SwitchToVirtualCamera(foundCamera);
-                    }
-                }
-            }
-            else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null)
-            {
-                HandleDoorInteraction(hit);
-            }
-        }
-        else
-        {
-            ResetCrosshair();
-        }
+        ResetCrosshair();
+        
 
         if (isUsingVirtualCamera && nowInteractingWith == "PowerPlantDisplay")
         {
             HandlePowerPlantControl();
         }
-    }
-
-
-    void HandleDoorInteraction(RaycastHit hit)
-    {
-        crosshairText = "Go";
-        crosshair.text = crosshairText;
     }
 
     void AssignInteraction(string name, CinemachineVirtualCamera camera)

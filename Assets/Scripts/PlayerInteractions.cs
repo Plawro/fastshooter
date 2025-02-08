@@ -18,7 +18,7 @@ public class PlayerInteractions : MonoBehaviour
 
     public LayerMask ignoreLayer;
     public TextMeshProUGUI crosshair;
-    string crosshairText = "Interact";
+    string crosshairText = "[E] Interact";
     public string crosshairSymbol = "+";
 
     public Transform leftHand;
@@ -61,7 +61,7 @@ public class PlayerInteractions : MonoBehaviour
 
             }else if (hit.transform.name == "powerswitch") {
                 if (hit.transform.parent.transform.GetComponent<TowerController>().isAntennaBroken) {
-                    crosshairText = "Hold to turn tower on";
+                    crosshairText = "Hold [E] to turn tower on";
                     crosshair.text = crosshairText;
                     if (Input.GetKey(KeyCode.E)) {
                         var towerController = hit.transform.parent.transform.GetComponent<TowerController>();
@@ -71,7 +71,7 @@ public class PlayerInteractions : MonoBehaviour
                         towerController.StopRepairingAntenna();
                     }
                 } else {
-                    crosshairText = "Turn tower off";
+                    crosshairText = "[E] Turn tower off";
                     crosshair.text = crosshairText;
                     if (Input.GetKeyDown(KeyCode.E)) {
                         statsScreen.BreakAntenna();

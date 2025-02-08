@@ -19,6 +19,7 @@ public class DoorController : MonoBehaviour
     private Vector3 startPos1;
     private Vector3 startPos2;
     private Vector3 forward;
+    [SerializeField] AudioSource doorSoundSource;
 
     private Coroutine currentAnimation = null; //Is there active Coroutine going on?
 
@@ -63,6 +64,16 @@ public class DoorController : MonoBehaviour
                 ChangeDoorMode(false); // Or also CloseDoor() directly
             }
         }
+    }
+
+    
+
+    public IEnumerator OpenCloseDoor()
+    {
+        yield return StartCoroutine(RotateDoorOpen());  // Wait until OpenDoor() finishes
+        yield return StartCoroutine(RotateDoorClose()); // Then start CloseDoor()
+        doorSoundSource.Play();
+        yield return null;
     }
     
     private void OpenDoor(){

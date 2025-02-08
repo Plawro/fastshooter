@@ -9,7 +9,7 @@ public class AmbientController : MonoBehaviour
     public AudioSource outWindAmbience;
     public float fadeDuration = 2.0f; // Transition in seconds
 
-    private bool isIndoors = false;
+    public bool isIndoors = false;
     public bool isOtherPlaying = false; // Stop ambient when chasing, ... music is playing
     private Coroutine currentFadeRoutine;
     private bool previousIsOtherPlaying = false;

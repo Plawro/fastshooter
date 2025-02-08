@@ -80,7 +80,7 @@ public class PowerPlantController : MonoBehaviour
 
     void Update()
     {   
-        if(!GameController.Instance.IsGamePaused()){
+        if(!GameController.Instance.IsGamePaused() && GameController.Instance.gameStarted){
         enemyCont.Charge((power+60)/2400);
         if (!isInDeadZone){
             if(power > 0){
@@ -90,7 +90,7 @@ public class PowerPlantController : MonoBehaviour
             }
         }
 
-         if(!isInDeadZone){
+         if(!isInDeadZone && !GameController.Instance.IsGamePaused() && GameController.Instance.gameStarted){
             power -= 0.003f;
             arrow.transform.eulerAngles = new Vector3(
                 arrow.transform.eulerAngles.x,
@@ -137,6 +137,7 @@ public class PowerPlantController : MonoBehaviour
                rotateCoroutine = StartCoroutine(RotateArrowToTarget(180));
 
                 isInWarningZone = false;
+                StartCoroutine(GameController.Instance.EndGameExplosion());
             }
         }else if(power <= -60.5f){ //nuclear reactor fell asleep - yeah, you can't restart it (such a skill issue)
             power = 0;
@@ -146,13 +147,25 @@ public class PowerPlantController : MonoBehaviour
             rotateCoroutine = StartCoroutine(RotateArrowToTarget(180));
             isInWarningZone = false;
             GameController.Instance.KillGenerator();
-            GameObject.Find("MASTER gameobject").GetComponent<GameController>().SwitchAllLights(false); //Also turn all electricity off
+            GameController.Instance.SwitchAllLights(false); //Also turn all electricity off
             if (audioSource.isPlaying && audioSource.clip == sound1)
             {
                 audioSource.Stop();
             }
         }
         
+    }
+
+    public void RestartGenerator(){
+            power = -30;
+            isInDeadZone = false;
+            isInWarningZone = false;
+            GameController.Instance.ReviveGenerator();
+            GameController.Instance.SwitchAllLights(true); //Also turn all electricity off
+            if (audioSource.isPlaying && audioSource.clip == sound3)
+            {
+                audioSource.Stop();
+            }
     }
 
     public void AddPower(float ammount){

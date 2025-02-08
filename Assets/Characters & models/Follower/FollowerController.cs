@@ -15,6 +15,7 @@ public class FollowerController : MonoBehaviour
     private Vector3 velocity;
     [SerializeField] private LayerMask groundLayer, playerLayer;
     [SerializeField] public LayerMask obstacleMask;
+    [SerializeField] public StatsScreen statsScreenController;
 
     private float sightRange = 25f; // How far does enemy see
     private float attackRange = 2f; // How far does enemy attack ("Arm length")
@@ -76,7 +77,7 @@ public class FollowerController : MonoBehaviour
 
     public void Charge(float ammount)
     {
-        if (isIdling)
+        if (isIdling && GameController.Instance.gameStarted)
         {
             charge += ammount;
             chargeText.text = $"{charge:F1}%";
@@ -460,6 +461,11 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
         if (!agent.pathPending && agent.remainingDistance <= 1f)
         {
             current++;
+
+            if(current == 2){
+                statsScreenController.BreakAntenna();
+            }
+
             if (current >= points.Length)
             {
                 print("END");

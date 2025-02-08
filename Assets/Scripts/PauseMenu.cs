@@ -16,6 +16,7 @@ public class PauseMenu : MonoBehaviour
 
     public static string endMessage = "End message";
     public TextMeshProUGUI endText;
+    public GameObject skullImage;
     public bool canBePaused;
     public GameObject loadingMenu;
     public TextMeshProUGUI loadingText;
@@ -26,10 +27,21 @@ public class PauseMenu : MonoBehaviour
     {
         if(SceneManager.GetActiveScene().name != "Game1 1"){
             Destroy(GameObject.Find("MASTER gameobject"));
+            Time.timeScale = 1;
+            if(SceneManager.GetActiveScene().name == "TheEnd"){
+                
+            endText = GameObject.Find("EndMessage").GetComponent<TextMeshProUGUI>();
+            endText.text = endMessage;
+            skullImage = GameObject.Find("DeathImage");
+
+            }
         }
+
+        
 
         loadingMenu.SetActive(false);
         pauseMenu.SetActive(isPaused);
+        if(SceneManager.GetActiveScene().name == "TheEnd")
         endText.text = endMessage;
         SetMasterVolume(16);
         SetAmbientVolume(16);
@@ -39,11 +51,11 @@ public class PauseMenu : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)){
+        if((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && SceneManager.GetActiveScene().name == "Game1 1"){
             ChangePauseMode();
         }
 
-        if(endMessage == "DEAD"){
+        if(endMessage != null){
             if(blinkImage == null && !alreadyBlinking){
                 alreadyBlinking = true;
                 blinkImage = StartCoroutine(BlinkImage());
@@ -100,14 +112,17 @@ public class PauseMenu : MonoBehaviour
     public void TheEnd(string endMessageGot){
         endMessage = endMessageGot;
         endText.text = endMessage;
-        SceneManager.LoadScene (sceneName:"TheEnd");
+        //Settings.Instance.deathMessage = endMessage;
+        SceneManager.LoadScene (sceneName:"TheEnd"); //FIX
     }
 
-    public GameObject skullImage;
+    public void Victory(){
+        SceneManager.LoadScene (sceneName:"Victory");
+    }
 
     private IEnumerator BlinkImage()
     {
-        while(true){
+        while(true && skullImage != null){
             skullImage.SetActive(!skullImage.activeSelf);
             yield return new WaitForSeconds(1.4f);
         }
@@ -151,9 +166,18 @@ public class PauseMenu : MonoBehaviour
         Application.Quit();
     }
 
+    public void SetQuality(int qualityIndex){
+        QualitySettings.SetQualityLevel(qualityIndex);
+    }
+
+    public void SetFullscreen(bool fullscreen){
+        Screen.fullScreen = fullscreen;
+    }
+
     public void SetMasterVolume(float level){
         //audioMixer.SetFloat("masterVolume", level*2);  // -40 to 0 range
         audioMixer.SetFloat("masterVolume", Mathf.Lerp(-20f, 0f, level / 20f)); // Better "0 to 100" difference (above method isn't "linear" - ig that's the name)
+        print(Mathf.Lerp(-20f, 0f, level / 20f));
     }
 
     public void SetSFXVolume(float level){

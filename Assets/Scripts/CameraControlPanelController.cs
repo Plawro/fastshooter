@@ -102,6 +102,7 @@ public class CameraControlPanelController : MonoBehaviour
             }else{
                 if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
                     nowInteractingWith = "ControlPanel";
+                    GameController.Instance.exitScreenButton.SetActive(true);
                     SwitchToVirtualCamera(controlPanelCam);
                 }
             }
@@ -124,15 +125,9 @@ public class CameraControlPanelController : MonoBehaviour
                 targetOffset = 90;
             }
 
+        }
+        
         }else{
-            if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove && flashCoroutine == null){
-                SwitchToMainCamera();
-                nowInteractingWith = "";
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                crosshair.enabled = true;
-            }
-        }}else{
             if(Input.GetKey(KeyCode.W) && GameController.Instance.canMove && flashCoroutine == null){
                 GameController.Instance.SwitchModeHallway(true);
             }
@@ -148,24 +143,7 @@ public class CameraControlPanelController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
         {
-            if(hit.transform.name == "ControlPanelCapsuleHolder"){
-                    if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
-                        crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into control panel";
-                        crosshair.text = crosshairText;
-                    }
-                    
-                    if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
-                        leftHand.GetChild(0).transform.parent = hit.transform;
-                        hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
-                        hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
-                    }
-
-                    if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
-                        rightHand.GetChild(0).transform.parent = hit.transform;
-                        hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
-                        hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
-                    }
-                }else if(hit.transform.name == "Datacapsule")
+            if(hit.transform.name == "Datacapsule")
             {
                 HandlePickupable(hit);
             }

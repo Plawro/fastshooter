@@ -11,6 +11,8 @@ public class LockingDisplay : MonoBehaviour
     public RectTransform squareScreenArea;
     public TextMeshProUGUI statusText;
     public StatsScreen rectangularScreenController;
+    
+    [SerializeField] private AudioClip bootSound;
 
 
     public Transform gameUI;
@@ -47,8 +49,10 @@ public class LockingDisplay : MonoBehaviour
                 if (blinkCoroutine != null)
                 {
                     StopCoroutine(blinkCoroutine);
+                    audioSource.PlayOneShot(bootSound);
                     activateText.gameObject.SetActive(false);
                     activateTextTC.gameObject.SetActive(false);
+                    GameController.Instance.gameStarted = true;
                 }
                 StartSearching(); // Start in searching mode
                 gameUI.gameObject.SetActive(true);

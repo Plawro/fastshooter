@@ -45,7 +45,7 @@ public class ControlPanelController : MonoBehaviour
         }
         i=0;
         if (correct == 6){
-            GameController.Instance.pauseMenu.TheEnd("You did it!");
+            GameController.Instance.pauseMenu.Victory();
         }
     }
 

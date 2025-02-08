@@ -9,6 +9,7 @@ public class GameController : MonoBehaviour
 {
     public static GameController Instance { get; private set;}
     
+    public bool gameStarted = false; // STARTS ENEMIES, ETC.
     
 
     [Header("Generator stuff")]
@@ -20,24 +21,27 @@ public class GameController : MonoBehaviour
     [SerializeField] public DCUploaderController DCuploader;
     [SerializeField] public PauseMenu pauseMenu;
     [SerializeField] private PlayerInteractions playerInteractions;
+    [SerializeField] public GameObject exitScreenButton;
 
     [Header("Jumpscare related")]
     public CinemachineVirtualCamera jumpscareCameraFollower;
     public CinemachineVirtualCamera jumpscareCameraDrift1;
     public CinemachineVirtualCamera jumpscareCameraDrift2;
+    public CinemachineVirtualCamera jumpscareCameraSentinel;
     public CinemachineBrain cameraBrain;
     bool wasJumpscared = false;
     bool isSceneLoading = false;
+    [SerializeField] GameObject playerLight;
 
     [Header("Camera related")]
     public CinemachineVirtualCamera activeVirtualCamera;
-    [SerializeField] Transform playerHallway;
+    [SerializeField] public Transform playerHallway;
     private Vector3 hallwayRot = new Vector3(0,0,0);
-    [SerializeField] Transform playerTower;
+    [SerializeField] public Transform playerTower;
     private Vector3 towerRot = new Vector3(0,0,0);
-    [SerializeField] Transform playerPowerPlant;
+    [SerializeField] public Transform playerPowerPlant;
     private Vector3 powerPlantRot = new Vector3(0,0,0);
-    [SerializeField] Transform playerControlPanel;
+    [SerializeField] public Transform playerControlPanel;
     private Vector3 controlPanelRot = new Vector3(0,0,0);
     [SerializeField] CinemachineVirtualCamera playerCamera;
     [SerializeField] Transform playerObject; // Enable or disable outside body
@@ -71,10 +75,30 @@ public class GameController : MonoBehaviour
         playerCamera.transform.localRotation = Quaternion.Euler(-7,0,0); // Set camera rotation on start
     }
 
+    public void ExitScreen(){
+        if(playerTower.gameObject.activeSelf){
+            playerTower.GetComponent<CameraTowerController>().SwitchToMainCamera();
+            playerTower.GetComponent<CameraTowerController>().nowInteractingWith = "";
+            
+        }else if(playerPowerPlant.gameObject.activeSelf){
+            playerPowerPlant.GetComponent<CameraPowerPlantController>().SwitchToMainCamera();
+            playerPowerPlant.GetComponent<CameraPowerPlantController>().nowInteractingWith = "";
+        }else if(playerControlPanel.gameObject.activeSelf){
+            playerControlPanel.GetComponent<CameraControlPanelController>().SwitchToMainCamera();
+            playerControlPanel.GetComponent<CameraControlPanelController>().nowInteractingWith = "";
+        }
+        GameController.Instance.exitScreenButton.SetActive(false);
+    }
+
 
     public void KillGenerator(){
         isGeneratorDead = true;
         SwitchAllLights(false);
+    }
+
+    public void ReviveGenerator(){
+        isGeneratorDead = false;
+        SwitchAllLights(true);
     }
     
     public void SwitchAllLights(bool turnMode){
@@ -148,7 +172,9 @@ public class GameController : MonoBehaviour
             crosshair.enabled = false;
             if(fadeOut){
                 yield return new WaitForSeconds(1);
-                ambient.SetInside();
+                if(!ambient.isIndoors){
+                    ambient.SetInside();
+                }
                 yield return StartCoroutine(FadeIn());
             }else{
                 yield return null;
@@ -300,6 +326,7 @@ public class GameController : MonoBehaviour
     }
 
     public void Jumpscare(string enemyName){
+        playerLight.SetActive(true);
         if(enemyName == "Follower" && !wasJumpscared){
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
             playerInteractions.SwitchToVirtualCamera(jumpscareCameraFollower);
@@ -307,7 +334,7 @@ public class GameController : MonoBehaviour
             StartCoroutine(playerInteractions.ShakeCamera(0.02f));
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
-            StartCoroutine(EndJumpscare());
+            StartCoroutine(EndJumpscare("Follower"));
         }else if(enemyName == "Drift1" && !wasJumpscared){
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
             playerInteractions.SwitchToVirtualCamera(jumpscareCameraDrift1);
@@ -315,7 +342,7 @@ public class GameController : MonoBehaviour
             StartCoroutine(playerInteractions.ShakeCamera(0.02f));
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
-            StartCoroutine(EndJumpscare());
+            StartCoroutine(EndJumpscare("Drift"));
         }else if(enemyName == "Drift2" && !wasJumpscared){
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
             playerInteractions.SwitchToVirtualCamera(jumpscareCameraDrift2);
@@ -323,17 +350,42 @@ public class GameController : MonoBehaviour
             StartCoroutine(playerInteractions.ShakeCamera(0.02f));
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
-            StartCoroutine(EndJumpscare()); 
+            StartCoroutine(EndJumpscare("Drift")); 
+        }else if(enemyName == "Sentinel" && !wasJumpscared){
+            cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
+            playerInteractions.SwitchToVirtualCamera(jumpscareCameraSentinel); // ALSO GO CLOSER LIKE A PROPER JUMPSCARE
+            playerInteractions.SaveLastKnownCameraPos();
+            StartCoroutine(playerInteractions.ShakeCamera(0.02f));
+            cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
+            cameraBrain.m_DefaultBlend.m_Time = 0.4f;
+            StartCoroutine(EndJumpscare("Sentinel")); 
         }
     }
 
-    public IEnumerator EndJumpscare(){
+    public IEnumerator EndJumpscare(string enemyName){
         if (isSceneLoading) yield break;
         isSceneLoading = true;
 
         yield return new WaitForSeconds(2);
         wasJumpscared = true;
-        pauseMenu.TheEnd("DEAD");
+        if(enemyName == "Follower"){
+            pauseMenu.TheEnd("You ran fast. It was pointless.");
+        }else if(enemyName == "Follower"){
+            pauseMenu.TheEnd("He just wanted to repair you.");
+        }else{
+            pauseMenu.TheEnd("Another one for Drift's collection.");
+        }
+        
+        yield return null; 
+    }
+
+    public IEnumerator EndGameExplosion(){
+        if (isSceneLoading) yield break;
+        isSceneLoading = true;
+
+        yield return new WaitForSeconds(6);
+        wasJumpscared = true;
+        pauseMenu.TheEnd("TURNED INTO RADIOACTIVE DUST");
         yield return null; 
     }
 }

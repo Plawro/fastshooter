@@ -1441,10 +1441,11 @@ MonoBehaviour:
   pause: {fileID: 8300000, guid: 47288798d597d23489b2b3a807324162, type: 3}
   audioMixer: {fileID: 24100000, guid: bb8f80db6cb460c4b84e6a63450da461, type: 2}
   endText: {fileID: 968294125}
+  skullImage: {fileID: 1806408411}
   canBePaused: 0
   loadingMenu: {fileID: 454331860}
   loadingText: {fileID: 1288178655}
-  skullImage: {fileID: 1806408411}
+  playerObject: {fileID: 0}
 --- !u!114 &830621666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1547,7 +1548,7 @@ GameObject:
   - component: {fileID: 968294126}
   - component: {fileID: 968294125}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: EndMessage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2083,7 +2084,7 @@ GameObject:
   - component: {fileID: 1806408413}
   - component: {fileID: 1806408412}
   m_Layer: 5
-  m_Name: Image
+  m_Name: DeathImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
