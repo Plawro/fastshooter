@@ -468,7 +468,6 @@ private IEnumerator FadeOutAndIn(AudioClip newClip)
 
             if (current >= points.Length)
             {
-                print("END");
                 current = 0;
                 agent.SetDestination(points[current+1].position);
                 isPatrolling = false;

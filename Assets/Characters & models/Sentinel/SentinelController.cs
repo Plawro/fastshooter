@@ -32,7 +32,7 @@ public class SentinelController : MonoBehaviour
     Coroutine restartCoroutine;
     void Start()
     {
-        timeTillBoot = Random.Range(5,30);
+        timeTillBoot = Random.Range(5,20);
     }
 
     void Update()
@@ -131,7 +131,7 @@ public class SentinelController : MonoBehaviour
         isOnline = false;
             while (charge < 85 && isOnline == false)
             {
-                charge += Time.deltaTime * 0.85f; // Increase charge over time
+                charge += Time.deltaTime * 1.65f; // Increase charge over time
                 statusText.text = $"{charge:F0}%";
                 yield return null;
             }
@@ -157,7 +157,7 @@ public class SentinelController : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         lightToFlicker.SetActive(true);
         isOnline = true;
-        timeTillFootstep = Random.Range(7,30);
+        timeTillFootstep = Random.Range(7,20);
         footstepAmmount = 0;
         yield break;
     }
@@ -173,7 +173,7 @@ public class SentinelController : MonoBehaviour
     }
 
     void ResetFootstep(){
-        timeTillFootstep = Random.Range(7,30);
+        timeTillFootstep = Random.Range(7,20);
     }
 
     void PlayFootstep(){
@@ -194,6 +194,21 @@ public class SentinelController : MonoBehaviour
         }
     }
     Coroutine playerCheck;
+
+    void GetOffRoom(string where){
+        sentinelHallway.SetActive(false);
+        sentinelRoom.SetActive(false);
+        sentinelOff.SetActive(false);
+        PlayFootstep();
+        if(where == "tower"){
+            StartCoroutine(doorTower.OpenCloseDoor());
+        }else{
+            StartCoroutine(doorPowerPlant.OpenCloseDoor());
+        }
+        timeTillFootstep = Random.Range(7,20);
+        footstepAmmount = 0;
+    }
+
     IEnumerator GetInRoom(){
         float countdown = 10f;
         float timeInHallway = 0f;
@@ -222,8 +237,9 @@ public class SentinelController : MonoBehaviour
                     if(playerCheck != null){
                         StopCoroutine(playerCheck);
                     }
-                    playerCheck = StartCoroutine(CheckPlayer());
-
+                    yield return playerCheck = StartCoroutine(CheckPlayer());
+                    yield return new WaitForSeconds(5);
+                    GetOffRoom("tower");
                     yield break;
                 } else if (GameController.Instance.playerPowerPlant.gameObject.activeSelf){
                     StartCoroutine(doorPowerPlant.OpenCloseDoor());
@@ -235,7 +251,9 @@ public class SentinelController : MonoBehaviour
                         StopCoroutine(playerCheck);
                     }
                     yield return playerCheck = StartCoroutine(CheckPlayer());
+                    yield return new WaitForSeconds(5);
                     powerPlantController.RestartGenerator();
+                    GetOffRoom("powerplant");
                     yield break;
                 }
                 yield break;
@@ -254,7 +272,7 @@ public class SentinelController : MonoBehaviour
         while (timeLookingAtSentinel < requiredTime)
         {
 
-            if (!isOnline)
+            if (!isOnline || !GameController.Instance.playerPowerPlant.gameObject.activeSelf || !GameController.Instance.playerTower.gameObject.activeSelf)
             {
                 yield break; // Stop checking if Sentinel is charging
             }

@@ -20,7 +20,7 @@ public class GameController : MonoBehaviour
     [Header("References")]
     [SerializeField] public DCUploaderController DCuploader;
     [SerializeField] public PauseMenu pauseMenu;
-    [SerializeField] private PlayerInteractions playerInteractions;
+    [SerializeField] public PlayerInteractions playerInteractions;
     [SerializeField] public GameObject exitScreenButton;
 
     [Header("Jumpscare related")]
@@ -28,6 +28,7 @@ public class GameController : MonoBehaviour
     public CinemachineVirtualCamera jumpscareCameraDrift1;
     public CinemachineVirtualCamera jumpscareCameraDrift2;
     public CinemachineVirtualCamera jumpscareCameraSentinel;
+    public CinemachineVirtualCamera jumpscareCameraCargoMule;
     public CinemachineBrain cameraBrain;
     bool wasJumpscared = false;
     bool isSceneLoading = false;
@@ -43,7 +44,7 @@ public class GameController : MonoBehaviour
     private Vector3 powerPlantRot = new Vector3(0,0,0);
     [SerializeField] public Transform playerControlPanel;
     private Vector3 controlPanelRot = new Vector3(0,0,0);
-    [SerializeField] CinemachineVirtualCamera playerCamera;
+    [SerializeField] public CinemachineVirtualCamera playerCamera;
     [SerializeField] Transform playerObject; // Enable or disable outside body
     [SerializeField] public Collider walkInsideCollider;
     [SerializeField] Transform playerSpawnPoint;
@@ -106,6 +107,21 @@ public class GameController : MonoBehaviour
             light.gameObject.SetActive(turnMode);
             light.gameObject.transform.parent.GetComponent<Renderer>().material.color = Color.black;
             light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.black);
+        }
+    }
+
+    public void SwitchAllLightsColored(Color turnMode){
+        foreach (var light in lights){
+            if(turnMode == Color.yellow){
+                light.gameObject.transform.parent.GetComponent<Renderer>().material.color = new Color(247, 243, 145);
+                light.gameObject.transform.GetComponent<Light>().color = new Color(247f / 255f, 243f / 255f, 145f / 255f); //191, 187, 144
+                //Or also Color RGBtoColor(int r,int g,int b)
+                light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color(247, 243, 145));
+            }else{
+                light.gameObject.transform.parent.GetComponent<Renderer>().material.color = turnMode;
+                light.gameObject.transform.GetComponent<Light>().color = turnMode;
+                light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", turnMode);
+            }
         }
     }
 
@@ -359,6 +375,14 @@ public class GameController : MonoBehaviour
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
             StartCoroutine(EndJumpscare("Sentinel")); 
+        }else if(enemyName == "CargoMule" && !wasJumpscared){
+            cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
+            playerInteractions.SwitchToVirtualCamera(jumpscareCameraCargoMule); // ALSO GO CLOSER LIKE A PROPER JUMPSCARE
+            playerInteractions.SaveLastKnownCameraPos();
+            StartCoroutine(playerInteractions.ShakeCamera(0.02f));
+            cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
+            cameraBrain.m_DefaultBlend.m_Time = 0.4f;
+            StartCoroutine(EndJumpscare("CargoMule")); 
         }
     }
 
@@ -370,8 +394,10 @@ public class GameController : MonoBehaviour
         wasJumpscared = true;
         if(enemyName == "Follower"){
             pauseMenu.TheEnd("You ran fast. It was pointless.");
-        }else if(enemyName == "Follower"){
+        }else if(enemyName == "Sentinel"){
             pauseMenu.TheEnd("He just wanted to repair you.");
+        }else if(enemyName == "CargoMule"){
+            pauseMenu.TheEnd("Crushed into a gift box.");
         }else{
             pauseMenu.TheEnd("Another one for Drift's collection.");
         }

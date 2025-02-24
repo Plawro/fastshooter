@@ -64,7 +64,7 @@ public class CameraTowerController : MonoBehaviour
 
     void Update()
     {
-        crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 50);
+        crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 30);
         // Check for "look back" key (S)
         //if (Input.GetKeyDown(KeyCode.S))
         //{
@@ -141,7 +141,7 @@ public class CameraTowerController : MonoBehaviour
             {
                 HandleDataCapsuleBasket(hit);
             }
-            else if(hit.transform.CompareTag("Interactable") && (hit.transform.name == "Datacapsule" || hit.transform.name == "Flashlight"))
+            else if(hit.transform.CompareTag("Interactable") && (hit.transform.name == "Datacapsule" || hit.transform.name == "Flash"))
             {
                 HandlePickupable(hit);
             }else{
@@ -242,7 +242,6 @@ public class CameraTowerController : MonoBehaviour
 
     void PickupObject(Transform obj, Transform hand)
     {
-        print("yes");
         obj.position = hand.position;
         obj.parent = hand;
         obj.localRotation = Quaternion.Euler(0, 180, 0);

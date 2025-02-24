@@ -11,6 +11,7 @@ public class PauseMenu : MonoBehaviour
     public bool isPaused = false;
     public AudioSource soundSource;
     public AudioClip pause;
+    int mainMenuSelected;
 
     [SerializeField] AudioMixer audioMixer;
 
@@ -23,6 +24,7 @@ public class PauseMenu : MonoBehaviour
     Coroutine blinkImage;
     bool alreadyBlinking;
     [SerializeField] GameObject playerObject;
+    [SerializeField] GameObject options;
     void Start()
     {
         if(SceneManager.GetActiveScene().name != "Game1 1"){
@@ -37,6 +39,10 @@ public class PauseMenu : MonoBehaviour
             }
         }
 
+        if(SceneManager.GetActiveScene().name == "MainMenu"){
+            mainMenuSelected = 1;
+            MainMenuChangeColor(mainMenuSelected);
+        }
         
 
         loadingMenu.SetActive(false);
@@ -47,10 +53,34 @@ public class PauseMenu : MonoBehaviour
         SetAmbientVolume(16);
         SetSFXVolume(16);
         SetSirenVolume(16);
+        //Set main menu / game sliders to volume too
     }
 
     void Update()
     {
+        if(SceneManager.GetActiveScene().name == "MainMenu"){
+            if(Input.GetKeyDown(KeyCode.S)){
+                if(mainMenuSelected < 3){
+                    mainMenuSelected++;
+                    MainMenuChangeColor(mainMenuSelected);
+                }else{
+                    mainMenuSelected = 1;
+                    MainMenuChangeColor(mainMenuSelected);
+                }
+            }else if(Input.GetKeyDown(KeyCode.W)){
+                if(mainMenuSelected > 1){
+                    mainMenuSelected--;
+                    MainMenuChangeColor(mainMenuSelected);
+                }else{
+                    mainMenuSelected = 3;
+                    MainMenuChangeColor(mainMenuSelected);
+                }
+            }else if(Input.GetKeyDown(KeyCode.Space)){
+                MainMenuPick(mainMenuSelected);
+            }
+            MainMenuChangeColor(mainMenuSelected);
+        }
+
         if((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) && SceneManager.GetActiveScene().name == "Game1 1"){
             ChangePauseMode();
         }
@@ -63,6 +93,40 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
+    public void MainMenuChangeColor(int selected){
+        switch(selected){
+            case 1:
+                mainMenuButtons[0].color = Color.white; // For coule be used, but its unnecessary if we know there are always 3 buttons and only 2 of them set to basic color
+                mainMenuButtons[1].color = Color.gray;
+                mainMenuButtons[2].color = Color.gray;
+                break;
+            case 2:
+                mainMenuButtons[0].color = Color.gray;
+                mainMenuButtons[1].color = Color.white;
+                mainMenuButtons[2].color = Color.gray;
+                break;
+            case 3:
+                mainMenuButtons[0].color = Color.gray;
+                mainMenuButtons[1].color = Color.gray;
+                mainMenuButtons[2].color = Color.white;
+                break;
+        }
+    }
+
+    public void MainMenuPick(int selected){
+        switch(selected){
+            case 1:
+                StartGame();
+                break;
+            case 2:
+                Options();
+                break;
+            case 3:
+                Quit();
+                break;
+        }
+    }
+    [SerializeField] TextMeshProUGUI[] mainMenuButtons;
     public void ChangePauseMode(){
         if(canBePaused){
             soundSource.PlayOneShot(pause);
@@ -164,6 +228,10 @@ public class PauseMenu : MonoBehaviour
 
     public void Quit(){
         Application.Quit();
+    }
+
+    public void Options(){
+        options.SetActive(!options.activeSelf);
     }
 
     public void SetQuality(int qualityIndex){

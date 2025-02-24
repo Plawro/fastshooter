@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
+using UnityEngine.ProBuilder.MeshOperations;
 
 public class LockingDisplay : MonoBehaviour
 {
@@ -10,6 +12,7 @@ public class LockingDisplay : MonoBehaviour
     public RectTransform targetFrequency;
     public RectTransform squareScreenArea;
     public TextMeshProUGUI statusText;
+    public TextMeshProUGUI coordsText;
     public StatsScreen rectangularScreenController;
     
     [SerializeField] private AudioClip bootSound;
@@ -31,6 +34,7 @@ public class LockingDisplay : MonoBehaviour
     private bool isBlinking = true;
     public TowerController towerController;
     private Coroutine checkAntennaRoutine;
+    public TMPro.TMP_FontAsset easvhsFont;
 
     private void Start()
     {
@@ -66,6 +70,10 @@ public class LockingDisplay : MonoBehaviour
             HandleInput();
         }
 
+        if(preGameUI.gameObject.activeSelf == false){
+            coordsText.text = "X:" + (currentFrequency.transform.localPosition.x / 3.4 + 150).ToString("F0") + " " + "Y:" + (currentFrequency.transform.localPosition.y / 3.4 + 150).ToString("F0");
+        }
+
         ClampCurrentFrequencyPosition(); // Ensure current frequency stays within bounds
     }
 
@@ -90,6 +98,7 @@ public class LockingDisplay : MonoBehaviour
         if (RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null) && targetFrequency.gameObject.activeSelf)
         {
             if (lockingCoroutine == null)
+                statusText.text = "SYNCING";
                 lockingCoroutine = StartCoroutine(LockingProcess());
         }
         else
@@ -98,7 +107,7 @@ public class LockingDisplay : MonoBehaviour
             {
                 StopCoroutine(lockingCoroutine);
                 lockingCoroutine = null;
-                statusText.text = "Searching";
+                statusText.text = "STANDBY";
             }
         }
     }
@@ -116,33 +125,52 @@ public class LockingDisplay : MonoBehaviour
         currentFrequency.anchoredPosition = clampedPosition;
     }
 
+    bool soundPlayed;
+    float soundTimer = 0;
+    void LateUpdate()
+    {
+        if(soundPlayed){
+            soundTimer += Time.deltaTime;
+        }else{
+            soundTimer = 0;
+        }
+        if(soundTimer > 6){
+            soundTimer = 0;
+            soundPlayed = false;
+        }
+    }
+
+
     private IEnumerator LockingProcess()
     {
         float lockTime = 3f;
         float elapsed = 0f;
-        statusText.text = "Locking";
+        statusText.text = "LOCKING";
         while (elapsed < lockTime)
         {
-            if (!RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null))
-            {
-                statusText.text = "Searching";
+            if(RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null)){
+                if(!audioSource.isPlaying && !soundPlayed){
+                    audioSource.Play();
+                    soundPlayed = true;
+                }
+            }else{
+                statusText.text = "STANDBY";
                 lockingCoroutine = null;
+                if(statusText.text != "LOCKED"){
+                    audioSource.Stop();
+                    soundPlayed = false;
+                }
                 yield break;
             }
-            if (!audioSource.isPlaying)
-            {
-                audioSource.Play();
-            }
+
             elapsed += Time.deltaTime;
             yield return null;
         }
-
         // Lock is successful
         isLocked = true;
         isSearching = false;
-        statusText.text = "Locked";
+        statusText.text = "LOCKED";
         StopSearchingAnimation(); // Stop the blinking animation
-
         // Random chance to break antenna (will be replaced soon)
         if (Random.value < antennaBreakChance)
         {
@@ -158,7 +186,7 @@ public class LockingDisplay : MonoBehaviour
     {
         isSearching = true;
         isLocked = false;
-        statusText.text = "Searching";
+        statusText.text = "STANDBY";
 
         // Start the blinking animation for "searching" mode
         if (searchBlinkCoroutine == null)
@@ -173,6 +201,13 @@ public class LockingDisplay : MonoBehaviour
     private IEnumerator CheckAntennaStatus()
     {
         targetFrequency.gameObject.SetActive(false);
+        foreach (Transform child in targetFrequency.parent)
+{
+        if (child.name.StartsWith("FakeFreq_"))
+        {
+            Destroy(child.gameObject);
+        }
+    }
         Debug.Log(towerController.isAntennaBroken + GameController.Instance.DCuploader.CheckCapsule() + GameController.Instance.DCuploader.CheckCapsuleMode());
         while (towerController.isAntennaBroken || GameController.Instance.DCuploader.CheckCapsule() == "Empty" || GameController.Instance.DCuploader.CheckCapsuleMode() == 1 || GameController.Instance.DCuploader.CheckCapsuleMode() == 2 || GameController.Instance.DCuploader.CheckCapsuleMode() == 3)
         {
@@ -198,7 +233,18 @@ public class LockingDisplay : MonoBehaviour
     private IEnumerator SpawnNewTargetFrequency()
     {
         targetFrequency.gameObject.SetActive(false); // Hide target frequency initially
-
+        foreach (Transform child in targetFrequency.parent)
+        {
+            if (child.name.StartsWith("FakeFreq_"))
+            {
+                Destroy(child.gameObject);
+            }
+        }
+        int cloneCount = Random.Range(2, 5); // Random between 2 and 4 clones
+        for (int i = 0; i < cloneCount; i++)
+        {
+            StartCoroutine(SpawnFakeFrequency());
+        }
         yield return new WaitForSeconds(Random.Range(1f, 10f)); // Random delay between 1 and 10 seconds
 
         if (isSearching)
@@ -216,6 +262,60 @@ public class LockingDisplay : MonoBehaviour
             targetFrequency.gameObject.SetActive(true); // Show target frequency
         }
     }
+
+
+    IEnumerator SpawnFakeFrequency()
+{
+    yield return new WaitForSeconds(Random.Range(2,6));
+    // Create a new empty GameObject for the fake frequency
+    GameObject fakeFreq = new GameObject("FakeFreq_" + Random.Range(1000, 9999), typeof(RectTransform), typeof(Image));
+    fakeFreq.transform.SetParent(targetFrequency.parent, false); // Parent it to the same UI canvas
+
+    RectTransform fakeRect = fakeFreq.GetComponent<RectTransform>();
+    fakeRect.sizeDelta = targetFrequency.sizeDelta; // Match the size of the original
+
+    // Set random position within screen bounds
+    float halfWidth = 125f / 2;
+    float halfHeight = 125f / 2;
+    fakeRect.anchoredPosition = new Vector2(
+        Random.Range(-squareScreenArea.rect.width / 2 + halfWidth, squareScreenArea.rect.width / 2 - halfWidth),
+        Random.Range(-squareScreenArea.rect.height / 2 + halfHeight, squareScreenArea.rect.height / 2 - halfHeight)
+    );
+
+    // Set the Image component to gray
+    Image img = fakeFreq.GetComponent<Image>();
+    img.sprite = targetFrequency.GetComponent<Image>().sprite; // Use the same sprite
+    img.color = Color.gray; // Change color to gray
+
+    // === Add TextMeshPro Component ===
+    GameObject textObj = new GameObject("FakeFreq_Text", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+    textObj.transform.SetParent(fakeFreq.transform, false);
+
+    RectTransform textRect = textObj.GetComponent<RectTransform>();
+    textRect.sizeDelta = new Vector2(70f, 20f); // Set a reasonable size for the text
+    textRect.anchorMin = new Vector2(0f, 0f); // Bottom-left corner
+    textRect.anchorMax = new Vector2(0f, 0f);
+    textRect.pivot = new Vector2(0f, 0f);
+    textRect.anchoredPosition = new Vector2(5f, 5f); // Offset from bottom-left corner
+
+    TMPro.TextMeshProUGUI textComponent = textObj.GetComponent<TMPro.TextMeshProUGUI>();
+    textComponent.text = "UNKNOWN";
+    textComponent.fontSize = 10f;
+    textComponent.alignment = TMPro.TextAlignmentOptions.BottomLeft;
+     if (easvhsFont != null)
+    {
+        textComponent.font = easvhsFont;
+    }
+    else
+    {
+        Debug.LogWarning("Font not assigned in Inspector! Assign easvhsFont manually.");
+    }
+
+    // Ensure it's visible
+    fakeFreq.SetActive(true);
+    yield return null;
+}
+
 
     private IEnumerator BlinkText()
     {

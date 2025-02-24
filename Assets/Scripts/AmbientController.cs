@@ -1,12 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AmbientController : MonoBehaviour
 {
     public AudioSource inAmbience;
     public AudioSource outAmbience;
     public AudioSource outWindAmbience;
+    public AudioSource sirenSource;
     public float fadeDuration = 2.0f; // Transition in seconds
 
     public bool isIndoors = false;
@@ -14,6 +18,10 @@ public class AmbientController : MonoBehaviour
     private Coroutine currentFadeRoutine;
     private bool previousIsOtherPlaying = false;
     public Material skyboxMaterial;
+    float timeTillStorm;
+    bool stormStarted = false;
+
+    [SerializeField] GameObject exitSign;
 
     void Start()
     {
@@ -21,6 +29,8 @@ public class AmbientController : MonoBehaviour
         outAmbience.volume = 0;
         inAmbience.Play();
         outAmbience.Play();
+        timeTillStorm = Random.Range(40, 210);
+        dangerText.enabled = false;
     }
 
     private int indoorsCollidersTouched = 0;  // Track how many indoor colliders are touched
@@ -30,6 +40,57 @@ public class AmbientController : MonoBehaviour
         isIndoors = false;
         if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
         currentFadeRoutine = StartCoroutine(FadeToOutdoor());
+    }
+
+    IEnumerator BlinkSiren(){
+        GameController.Instance.SwitchAllLightsColored(Color.red);
+        while(stormStarted){
+            exitSign.transform.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.red);
+            exitSign.GetComponent<Renderer>().material.color = Color.red;
+            exitSign.transform.GetChild(0).GetComponent<Light>().color = Color.red;
+            exitSign.transform.GetChild(1).GetComponent<Light>().color = Color.red;
+            exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.red;
+            yield return new WaitForSeconds(1);
+            exitSign.transform.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.black);
+            exitSign.GetComponent<Renderer>().material.color = Color.black;
+            exitSign.transform.GetChild(0).GetComponent<Light>().color = Color.black;
+            exitSign.transform.GetChild(1).GetComponent<Light>().color = Color.black;
+            exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.black;
+            yield return new WaitForSeconds(1);
+        }
+        stormLife = null;
+        yield break; 
+    }
+
+    IEnumerator StormLife(){
+        print("STORM");
+        yield return new WaitForSeconds(25);
+        StopStorm();
+        yield return null;
+    }
+
+    Coroutine stormLife;
+    public void Storm(){
+        stormStarted = true;
+        sirenSource.Play();
+        StartCoroutine(BlinkSiren());
+        stormLife = StartCoroutine(StormLife());
+        //Start sirens, glowing red on tower
+        //Darken fog
+        //Player must
+    }
+    Color color;
+    public void StopStorm(){
+        GameController.Instance.SwitchAllLightsColored(Color.yellow);
+        StopCoroutine(BlinkSiren());
+        exitSign.transform.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.green);
+        exitSign.GetComponent<Renderer>().material.color = Color.green;
+        exitSign.transform.GetChild(0).GetComponent<Light>().color = Color.green;
+        exitSign.transform.GetChild(1).GetComponent<Light>().color = Color.green;
+        exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.white;
+        sirenSource.Stop();
+        stormStarted = false;
+        timeTillStorm = Random.Range(40,210);
     }
 
 
@@ -70,9 +131,42 @@ private void OnTriggerExit(Collider other)
 
 }
 */
+    [SerializeField] TextMeshProUGUI dangerText;
+    Coroutine dangerTextBlinking;
+
+    IEnumerator DangerTextBlinking(){
+        CinemachineVirtualCamera mainCamera = GameController.Instance.playerCamera;
+    float originalFOV = mainCamera.m_Lens.FieldOfView;
+
+    while (dangerText.enabled)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            // Shake the FOV randomly within a range
+            mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-5f, 5f); // Adjust intensity here
+
+            // Blink effect
+            dangerText.alpha = (i < 2) ? 0 : 255;
+
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+    }
 
     public void Update()
     {
+        if(GameController.Instance.gameStarted){
+            if(timeTillStorm <= 0){
+                if(stormStarted == false){
+                    Storm();
+                }
+            }else{
+                if(stormStarted == false){
+                    timeTillStorm -= Time.deltaTime;
+                }
+            }
+        }
+
         if (isIndoors)
         {
             if (RenderSettings.fogDensity > 0.055f)
@@ -84,9 +178,23 @@ private void OnTriggerExit(Collider other)
 
                 skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), new Color(20 / 255f, 20 / 255f, 20 / 255f), transitionProgress));
             }
+            dangerText.enabled = false;
+            //Remove darkening screen
         }
         else
         {
+            if(stormLife != null){
+                dangerText.text = "I SHOULD GET BACK INSIDE QUICKLY";
+                dangerText.enabled = true;
+                if(dangerTextBlinking == null){ // Or remove this for random blinking effect
+                    dangerTextBlinking = StartCoroutine(DangerTextBlinking());
+                }
+                //Coroutine blinking text start, start darkening the screen until player dies
+            }else{
+                dangerText.enabled = false;
+            }
+
+
             if (RenderSettings.fogDensity < 0.07f)
             {
                 RenderSettings.fogDensity += Time.deltaTime;
