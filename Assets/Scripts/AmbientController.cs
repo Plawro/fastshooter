@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Cinemachine;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
 public class AmbientController : MonoBehaviour
@@ -133,28 +135,46 @@ private void OnTriggerExit(Collider other)
 */
     [SerializeField] TextMeshProUGUI dangerText;
     Coroutine dangerTextBlinking;
-
+    bool useText1 = true;
     IEnumerator DangerTextBlinking(){
         CinemachineVirtualCamera mainCamera = GameController.Instance.playerCamera;
     float originalFOV = mainCamera.m_Lens.FieldOfView;
 
     while (dangerText.enabled)
     {
-        for (int i = 0; i < 4; i++)
-        {
-            // Shake the FOV randomly within a range
-            mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-5f, 5f); // Adjust intensity here
+            mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
+            dangerText.alpha = 0;
+            yield return new WaitForSeconds(0.1f);
 
-            // Blink effect
-            dangerText.alpha = (i < 2) ? 0 : 255;
+            dangerText.alpha = 255;
+            mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
+            if (stormLife != null && normalizedDistance >= 0.6f)
+            {
+                // Alternate between both messages
+                dangerText.text = "I AM DEAD";
+            }
+            else if (stormLife != null)
+            {
+                dangerText.text = "I SHOULD GET BACK INSIDE QUICKLY";
+            }
+            else if (normalizedDistance >= 0.6f)
+            {
+                dangerText.text = "I SHOULD RETURN BACK TO SAFETY";
+            }
 
             yield return new WaitForSeconds(0.1f);
-        }
+        
     }
     }
-
+    [SerializeField] Volume volume;
+    [SerializeField] GameObject centerObject;
+    float normalizedDistance;
+    float playerStormHP = 0;
+    float playerDistanceHP = 0; // not now
     public void Update()
     {
+        volume.weight = playerStormHP;
+        print(playerStormHP);
         if(GameController.Instance.gameStarted){
             if(timeTillStorm <= 0){
                 if(stormStarted == false){
@@ -169,6 +189,7 @@ private void OnTriggerExit(Collider other)
 
         if (isIndoors)
         {
+            playerStormHP = 0;
             if (RenderSettings.fogDensity > 0.055f)
             {
                 RenderSettings.fogDensity -= Time.deltaTime;
@@ -183,7 +204,32 @@ private void OnTriggerExit(Collider other)
         }
         else
         {
+            float distance = Vector3.Distance(centerObject.transform.position, GameController.Instance.playerCamera.transform.position);
+            normalizedDistance =  Mathf.Clamp01(distance / 200f);
+            if(normalizedDistance >= 1){
+                StartCoroutine(GameController.Instance.FadeOut());
+                StartCoroutine(KilledByStorm(2));
+            }else if (normalizedDistance >= 0.6f){
+                dangerText.text = "I SHOULD RETURN BACK TO SAFETY";
+                dangerText.enabled = true;
+                if(dangerTextBlinking == null){ // Or remove this for random blinking effect
+                    dangerTextBlinking = StartCoroutine(DangerTextBlinking());
+                }
+            }else{
+                if(stormLife == null){
+                    dangerText.enabled = false;
+                    dangerTextBlinking = null;
+                }
+            }
+
             if(stormLife != null){
+                if(playerStormHP <= 1){
+                   playerStormHP += Time.deltaTime/20;
+                }else{
+                    StartCoroutine(GameController.Instance.FadeOut());
+                    StartCoroutine(KilledByStorm(1));
+                }
+
                 dangerText.text = "I SHOULD GET BACK INSIDE QUICKLY";
                 dangerText.enabled = true;
                 if(dangerTextBlinking == null){ // Or remove this for random blinking effect
@@ -191,7 +237,11 @@ private void OnTriggerExit(Collider other)
                 }
                 //Coroutine blinking text start, start darkening the screen until player dies
             }else{
-                dangerText.enabled = false;
+                if (normalizedDistance <= 0.6f){
+                    dangerText.enabled = false;
+                    dangerTextBlinking = null;
+                }
+                playerStormHP = 0;
             }
 
 
@@ -205,7 +255,14 @@ private void OnTriggerExit(Collider other)
                 skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(20 / 255f, 20 / 255f, 20 / 255f), new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress));
             }
         }
-
+    IEnumerator KilledByStorm(int i){
+        if(i==1){
+            GameController.Instance.Jumpscare("Storm");
+        }else{
+            GameController.Instance.Jumpscare("Distance");
+        }
+        yield break;
+    }
         
 /*
     if (isOtherPlaying != previousIsOtherPlaying)
@@ -238,7 +295,7 @@ private void OnTriggerExit(Collider other)
     private IEnumerator FadeToIndoor()
 {
     float timer = 0f;
-
+    isInsidePlaying = true;
     while (timer < fadeDuration)
     {
         timer += Time.deltaTime;
@@ -248,11 +305,12 @@ private void OnTriggerExit(Collider other)
         yield return null;
     }
 }
+bool isInsidePlaying = false;
 
 private IEnumerator FadeToOutdoor()
 {
     float timer = 0f;
-
+    isInsidePlaying = false;
     while (timer < fadeDuration)
     {
         timer += Time.deltaTime;
@@ -263,7 +321,7 @@ private IEnumerator FadeToOutdoor()
     }
 }
 
-private IEnumerator FadeOutBoth()
+public IEnumerator FadeOutBoth()
 {
     float timer = 0f;
 
@@ -275,6 +333,16 @@ private IEnumerator FadeOutBoth()
         outWindAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
         yield return null;
     }
+}
+
+public IEnumerator FadeBackIn() // Could receive fixes, but works
+{
+    if(isInsidePlaying){
+        StartCoroutine(FadeToIndoor());
+    }else{
+        StartCoroutine(FadeToOutdoor());
+    }
+    yield break;
 }
 
 }

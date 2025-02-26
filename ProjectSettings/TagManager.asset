@@ -22,7 +22,7 @@ TagManager:
   - Weapon
   - 
   - Wall
-  - 
+  - Volume
   - Ground
   - 
   - Screen
@@ -31,7 +31,7 @@ TagManager:
   - Inventory
   - Volume
   - IgnoreRaycast
-  - 
+  - PostProcessing
   - 
   - 
   - 

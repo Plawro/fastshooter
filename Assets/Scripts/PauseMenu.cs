@@ -28,6 +28,8 @@ public class PauseMenu : MonoBehaviour
     void Start()
     {
         if(SceneManager.GetActiveScene().name != "Game1 1"){
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
             Destroy(GameObject.Find("MASTER gameobject"));
             Time.timeScale = 1;
             if(SceneManager.GetActiveScene().name == "TheEnd"){
@@ -47,12 +49,15 @@ public class PauseMenu : MonoBehaviour
 
         loadingMenu.SetActive(false);
         pauseMenu.SetActive(isPaused);
-        if(SceneManager.GetActiveScene().name == "TheEnd")
-        endText.text = endMessage;
-        SetMasterVolume(16);
-        SetAmbientVolume(16);
-        SetSFXVolume(16);
-        SetSirenVolume(16);
+        if(SceneManager.GetActiveScene().name == "TheEnd"){
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            endText.text = endMessage;
+            SetMasterVolume(16);
+            SetAmbientVolume(16);
+            SetSFXVolume(16);
+            SetSirenVolume(16);
+        }
         //Set main menu / game sliders to volume too
     }
 
@@ -192,8 +197,10 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
+    [SerializeField] AmbientController ambientCont;
     void PauseGame(){
         if(canBePaused){
+            StartCoroutine(ambientCont.FadeOutBoth());
             pauseMenu.SetActive(true);
             Time.timeScale = 0f;
             isPaused = true;
@@ -203,6 +210,7 @@ public class PauseMenu : MonoBehaviour
     }
 
     void ResumeGame(){
+        StartCoroutine(ambientCont.FadeBackIn());
         pauseMenu.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;

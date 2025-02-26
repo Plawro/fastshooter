@@ -72,7 +72,6 @@ public class GameController : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject); // Keep the GameManager across scenes (woah)
-
         playerCamera.transform.localRotation = Quaternion.Euler(-7,0,0); // Set camera rotation on start
     }
 
@@ -383,6 +382,10 @@ public class GameController : MonoBehaviour
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
             cameraBrain.m_DefaultBlend.m_Time = 0.4f;
             StartCoroutine(EndJumpscare("CargoMule")); 
+        }else if(enemyName == "Storm" && !wasJumpscared){
+            StartCoroutine(EndJumpscare("Storm")); 
+        }else if(enemyName == "Distance" && !wasJumpscared){
+            StartCoroutine(EndJumpscare("Distance")); 
         }
     }
 
@@ -398,6 +401,10 @@ public class GameController : MonoBehaviour
             pauseMenu.TheEnd("He just wanted to repair you.");
         }else if(enemyName == "CargoMule"){
             pauseMenu.TheEnd("Crushed into a gift box.");
+        }else if(enemyName == "Storm"){
+            pauseMenu.TheEnd("Glowing in the dark like a firefly.");
+        }else if(enemyName == "Distance"){
+            pauseMenu.TheEnd("Lost in the void... Forever.");
         }else{
             pauseMenu.TheEnd("Another one for Drift's collection.");
         }
