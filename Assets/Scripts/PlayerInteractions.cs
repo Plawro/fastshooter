@@ -165,7 +165,7 @@ public class PlayerInteractions : MonoBehaviour
         
     }
 
-    Vector3 lastKnownCamPos;
+    public Vector3 lastKnownCamPos;
     public void SaveLastKnownCameraPos(){
         lastKnownCamPos = GameController.Instance.activeVirtualCamera.transform.position;
     }

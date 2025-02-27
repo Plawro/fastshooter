@@ -255,8 +255,38 @@ public class SentinelController : MonoBehaviour
                     powerPlantController.RestartGenerator();
                     GetOffRoom("powerplant");
                     yield break;
+                }else{
+                    int goRand = Random.Range(0,1);
+                    if(goRand == 0){
+                            StartCoroutine(doorTower.OpenCloseDoor());
+                        sentinelRoom.transform.localPosition = new Vector3(22.538f,0,-4.2f);
+                        sentinelRoom.transform.eulerAngles = new Vector3(0,180,0);
+                        sentinelRoom.SetActive(true);
+                        sentinelHallway.SetActive(false);
+                        if(playerCheck != null){
+                            StopCoroutine(playerCheck);
+                        }
+                        yield return playerCheck = StartCoroutine(CheckPlayer());
+                        yield return new WaitForSeconds(5);
+                        GetOffRoom("tower");
+                        yield break;
+                    }else{
+                        StartCoroutine(doorPowerPlant.OpenCloseDoor());
+                        sentinelRoom.transform.localPosition = new Vector3(22.538f,0,4.2f);
+                        sentinelRoom.transform.eulerAngles = new Vector3(0,0,0);
+                        sentinelRoom.SetActive(true);
+                        sentinelHallway.SetActive(false);
+                        if(playerCheck != null){
+                            StopCoroutine(playerCheck);
+                        }
+                        yield return playerCheck = StartCoroutine(CheckPlayer());
+                        yield return new WaitForSeconds(5);
+                        powerPlantController.RestartGenerator();
+                        GetOffRoom("powerplant");
+                        yield break;
+                    }
+                    
                 }
-                yield break;
             }
 
             yield return null;

@@ -25,6 +25,7 @@ public class PauseMenu : MonoBehaviour
     bool alreadyBlinking;
     [SerializeField] GameObject playerObject;
     [SerializeField] GameObject options;
+    [SerializeField] GameObject warning;
     void Start()
     {
         if(SceneManager.GetActiveScene().name != "Game1 1"){
@@ -42,6 +43,8 @@ public class PauseMenu : MonoBehaviour
         }
 
         if(SceneManager.GetActiveScene().name == "MainMenu"){
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             mainMenuSelected = 1;
             MainMenuChangeColor(mainMenuSelected);
         }
@@ -49,7 +52,7 @@ public class PauseMenu : MonoBehaviour
 
         loadingMenu.SetActive(false);
         pauseMenu.SetActive(isPaused);
-        if(SceneManager.GetActiveScene().name == "TheEnd"){
+        if(SceneManager.GetActiveScene().name == "TheEnd" || SceneManager.GetActiveScene().name == "Victory"){
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             endText.text = endMessage;
@@ -81,7 +84,11 @@ public class PauseMenu : MonoBehaviour
                     MainMenuChangeColor(mainMenuSelected);
                 }
             }else if(Input.GetKeyDown(KeyCode.Space)){
-                MainMenuPick(mainMenuSelected);
+                if(warning.activeSelf){
+                    warning.SetActive(false);
+                }else{
+                    MainMenuPick(mainMenuSelected);
+                }
             }
             MainMenuChangeColor(mainMenuSelected);
         }

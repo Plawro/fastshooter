@@ -110,15 +110,17 @@ IEnumerator Flashed(){
     yield return null;
 }
 
-float timer;
+float timer = 0;
 IEnumerator PlayerDetected(){
+    timer = 0;
     while(playerObject.activeSelf){
+        print("Player detected: "+timer);
         timer += 1;
         if(timer >= 10){
             if(!musicAudioSource.isPlaying){
                 musicAudioSource.PlayOneShot(jumpscareSound);
             }
-            if(enemyPosition == 0){
+            if(enemyPosition == 0 || enemyPosition == 1){
                 GameController.Instance.Jumpscare("Drift1");
             }else{
                 GameController.Instance.Jumpscare("Drift2");

@@ -60,6 +60,11 @@ public class AmbientController : MonoBehaviour
             exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.black;
             yield return new WaitForSeconds(1);
         }
+        exitSign.transform.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.green);
+        exitSign.GetComponent<Renderer>().material.color = Color.green;
+        exitSign.transform.GetChild(0).GetComponent<Light>().color = Color.green;
+        exitSign.transform.GetChild(1).GetComponent<Light>().color = Color.green;
+        exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.white;
         stormLife = null;
         yield break; 
     }
@@ -85,11 +90,6 @@ public class AmbientController : MonoBehaviour
     public void StopStorm(){
         GameController.Instance.SwitchAllLightsColored(Color.yellow);
         StopCoroutine(BlinkSiren());
-        exitSign.transform.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.green);
-        exitSign.GetComponent<Renderer>().material.color = Color.green;
-        exitSign.transform.GetChild(0).GetComponent<Light>().color = Color.green;
-        exitSign.transform.GetChild(1).GetComponent<Light>().color = Color.green;
-        exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.white;
         sirenSource.Stop();
         stormStarted = false;
         timeTillStorm = Random.Range(40,210);
@@ -170,11 +170,9 @@ private void OnTriggerExit(Collider other)
     [SerializeField] GameObject centerObject;
     float normalizedDistance;
     float playerStormHP = 0;
-    float playerDistanceHP = 0; // not now
     public void Update()
     {
         volume.weight = playerStormHP;
-        print(playerStormHP);
         if(GameController.Instance.gameStarted){
             if(timeTillStorm <= 0){
                 if(stormStarted == false){

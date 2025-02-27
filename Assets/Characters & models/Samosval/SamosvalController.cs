@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CargoMuleController : MonoBehaviour
+public class SamosvalController : MonoBehaviour
 {
 
     [SerializeField] GameObject cargoMuleObject;
