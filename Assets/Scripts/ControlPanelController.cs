@@ -10,6 +10,7 @@ public class ControlPanelController : MonoBehaviour
     int e = 0;
     int i = 0;
     int correct = 0;
+    [SerializeField] TextMeshProUGUI taskText;
 
 
     void Start()
@@ -21,8 +22,11 @@ public class ControlPanelController : MonoBehaviour
         foreach (var c in capsuleHolder){
             if(c.childCount > 0){
                 capsuleIcons[e].transform.gameObject.SetActive(true);
-                if(c.GetChild(0).transform.GetComponent<DataCapsule>().number == e+1 && c.GetChild(0).transform.GetComponent<DataCapsule>().mode == 2){
+                if((c.GetChild(0).transform.GetComponent<DataCapsule>().number == e+1 || c.GetChild(0).transform.GetComponent<DataCapsule>().number == 0) && c.GetChild(0).transform.GetComponent<DataCapsule>().mode == 2){
                     Debug.Log("Found: "+ (e+1));
+                    if(e+1 == 6){
+                        Finish();
+                    }
                 }else{
                 capsuleIcons[e].transform.gameObject.SetActive(false);
             }
@@ -36,7 +40,7 @@ public class ControlPanelController : MonoBehaviour
         correct = 0;
         foreach (var c in capsuleHolder){
             if(c.childCount > 0){
-                if(c.GetChild(0).transform.GetComponent<DataCapsule>().number == i+1 && c.GetChild(0).transform.GetComponent<DataCapsule>().mode == 2){
+                if((c.GetChild(0).transform.GetComponent<DataCapsule>().number == i+1 || c.GetChild(0).transform.GetComponent<DataCapsule>().number == 0) && c.GetChild(0).transform.GetComponent<DataCapsule>().mode == 2){
                     correct++;
                 }else{
             }
@@ -45,7 +49,7 @@ public class ControlPanelController : MonoBehaviour
         }
         i=0;
         if (correct == 6){
-            GameController.Instance.pauseMenu.Victory();
+            taskText.color = Color.green;
         }
     }
 

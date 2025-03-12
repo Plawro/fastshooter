@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Diagnostics;
 
 public class StatsScreen : MonoBehaviour
 {  
     public GameObject playerObject;
+    public GameObject cameraStatsScreen;
      public Image[] progressBarImages; // Array of 26 images representing the progress bar
     public TextMeshProUGUI dataPackCountText;
     public TextMeshProUGUI countdownText; // Antenna warning text
@@ -19,11 +21,95 @@ public class StatsScreen : MonoBehaviour
     private Coroutine countdownCoroutine = null;
     public AudioSource audioSource;
     float progress = 0;
+    [SerializeField] AudioClip broken;
+    [SerializeField] AudioClip minigameSuccess;
 
     private void Start()
     {
         ResetProgressBar();
         countdownText.gameObject.SetActive(false);
+        moveDir = 1;
+        boostImage.parent.transform.gameObject.SetActive(false);
+        numberOfImages = progressBarImages.Length;
+    }
+
+
+    [SerializeField] Transform arrow;
+    int moveDir;
+    Coroutine finishedArrow;
+    [SerializeField] Transform boostImage;
+    string textValue;
+    int size;
+    int boostPower;
+    int numberOfImages;
+
+    void Update()
+    {
+        if(isTransferringData){
+            boostImage.parent.transform.gameObject.SetActive(true);
+        }else{
+            boostImage.parent.transform.gameObject.SetActive(false);
+        }
+
+        if (Input.GetKey(KeyCode.Space) && isTransferringData && !towerController.isAntennaBroken && cameraStatsScreen.GetComponent<CameraTowerController>().nowInteractingWith == "StatsScreen")
+        {
+            if(finishedArrow == null){
+                MoveArrow();
+            }
+        }else if (Input.GetKeyUp(KeyCode.Space) && isTransferringData && !towerController.isAntennaBroken && cameraStatsScreen.GetComponent<CameraTowerController>().nowInteractingWith == "StatsScreen"){
+            finishedArrow = StartCoroutine(StopArrow());
+        }
+    }
+
+
+    void MoveArrow()
+    {
+        if(arrow.transform.localPosition.x <= -280){
+            moveDir = 20;
+        }else if(arrow.transform.localPosition.x >= 280){
+            moveDir = -20;
+        }
+
+        arrow.transform.localPosition = new Vector2(arrow.transform.localPosition.x+moveDir, 141f);
+    }
+
+    IEnumerator StopArrow(){
+        CheckCollision();
+        yield return new WaitForSeconds(0.2f);
+        Reposition();
+        arrow.transform.localPosition = new Vector2(0, 141f);
+        finishedArrow = null;
+        yield break;
+    }
+    
+    void CheckCollision()
+    {
+        if(arrow.transform.localPosition.x - boostImage.transform.localPosition.x > -30 && arrow.transform.localPosition.x - boostImage.transform.localPosition.x < 30){
+            boostPower = size+1;
+            audioSource.PlayOneShot(minigameSuccess);
+            int currentIndex = Mathf.FloorToInt(progress * numberOfImages);
+            UpdateProgressBar(currentIndex);
+        }
+    }
+    
+    void Reposition(){
+        size = Random.Range(0,3);
+        switch(size){
+            case 0:
+                textValue = "+1";
+                boostImage.transform.GetComponent<RectTransform>().sizeDelta = new Vector2(70, 60);
+            break;
+            case 1:
+                textValue = "+2";
+                boostImage.transform.GetComponent<RectTransform>().sizeDelta = new Vector2(56, 60);
+            break;
+            case 2:
+                textValue = "+3";
+                boostImage.transform.GetComponent<RectTransform>().sizeDelta = new Vector2(32, 60);
+            break;
+        }
+        boostImage.transform.localPosition = new Vector2(Random.Range(-260,260), -2f);
+        boostImage.GetChild(0).GetComponent<TextMeshProUGUI>().text = textValue;
     }
 
     public void StartDataTransfer()
@@ -33,12 +119,12 @@ public class StatsScreen : MonoBehaviour
         progress = 0f;
         dataTransferCoroutine = StartCoroutine(DataTransferProgress());
     }
-
+    
     private IEnumerator DataTransferProgress()
     {
         GameController.Instance.DCuploader.CapsuleUploading();
         float transferDuration = 60f; // Assume data transfer takes 60 seconds
-        int numberOfImages = progressBarImages.Length;
+        numberOfImages = progressBarImages.Length;
 
         while (progress < 1f)
         {
@@ -47,7 +133,9 @@ public class StatsScreen : MonoBehaviour
                 yield break; // Exit if antenna is broken
             }
 
-            progress += Time.deltaTime / transferDuration;
+            progress += Time.deltaTime / transferDuration + boostPower * 0.02f;
+            boostPower = 0;
+            
             int currentIndex = Mathf.FloorToInt(progress * numberOfImages);
             if(GameController.Instance.DCuploader.transform.childCount != 3){
                 isTransferringData = false;
@@ -77,6 +165,7 @@ public class StatsScreen : MonoBehaviour
     private IEnumerator CountdownToReset()
     {
         int countdown = 30;
+        audioSource.PlayOneShot(broken);
         countdownText.text = $"Antenna broken! Time till signal lose: {countdown}";
         countdownText.gameObject.SetActive(true);
 
@@ -118,7 +207,6 @@ public class StatsScreen : MonoBehaviour
     private void UpdateProgressBar(int index)
     {
         index = Mathf.Clamp(index, 0, progressBarImages.Length - 1);
-
         // Activate all images up to the current index to create a filling effect (should look good)
         for (int i = 0; i <= index; i++)
         {

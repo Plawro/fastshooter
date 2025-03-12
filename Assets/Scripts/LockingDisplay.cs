@@ -21,15 +21,14 @@ public class LockingDisplay : MonoBehaviour
     public Transform gameUI;
     public Transform preGameUI;
     public Transform activateText;
+    public Transform minigameUI;
     public Transform activateTextTC;
 
     public bool isLocked = false;
     public bool isSearching = true;
     private Coroutine lockingCoroutine = null;
     private Coroutine searchBlinkCoroutine = null;
-    private float antennaBreakChance = 0.1f; // 10% chance of antenna breaking during data transfer (Will be replaced with automatical system later)
-
-    public AudioSource audioSource;
+     public AudioSource audioSource;
     private Coroutine blinkCoroutine;
     private bool isBlinking = true;
     public TowerController towerController;
@@ -49,7 +48,7 @@ public class LockingDisplay : MonoBehaviour
     private void Update()
     {
         if(!gameUI.gameObject.activeSelf){
-            if(Input.GetKeyDown(KeyCode.F) && playerObject.GetComponent<CameraTowerController>().nowInteractingWith == "LockingDisplay"){
+            if(Input.GetKeyDown(KeyCode.F) && GameController.Instance.vanLeft && playerObject.GetComponent<CameraTowerController>().nowInteractingWith == "LockingDisplay"){
                 if (blinkCoroutine != null)
                 {
                     StopCoroutine(blinkCoroutine);
@@ -62,6 +61,7 @@ public class LockingDisplay : MonoBehaviour
                 gameUI.gameObject.SetActive(true);
                 preGameUI.gameObject.SetActive(false);
                 activateText.gameObject.SetActive(false);
+                minigameUI.gameObject.SetActive(true);
             }
         }
 
@@ -97,9 +97,10 @@ public class LockingDisplay : MonoBehaviour
 
         if (RectTransformUtility.RectangleContainsScreenPoint(targetFrequency, currentFrequency.position, null) && targetFrequency.gameObject.activeSelf)
         {
-            if (lockingCoroutine == null)
+            if (lockingCoroutine == null){
                 statusText.text = "SYNCING";
                 lockingCoroutine = StartCoroutine(LockingProcess());
+            }
         }
         else
         {
@@ -172,8 +173,9 @@ public class LockingDisplay : MonoBehaviour
         statusText.text = "LOCKED";
         StopSearchingAnimation(); // Stop the blinking animation
         // Random chance to break antenna (will be replaced soon)
-        if (Random.value < antennaBreakChance)
+        if (Random.Range(1,5) == 2)
         {
+            print("2");
             rectangularScreenController.BreakAntenna();
         }
         else

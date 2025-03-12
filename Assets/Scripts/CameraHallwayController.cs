@@ -139,24 +139,12 @@ public class CameraHallwayController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
         {
-            CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
-            if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null)
-            {
-                HandleDoorInteraction(hit);
-            }
+            // Doesn't need to interact with nothing
         }
         else
         {
             ResetCrosshair();
         }
-    }
-
-
-
-    void HandleDoorInteraction(RaycastHit hit)
-    {
-        crosshairText = "Go";
-        crosshair.text = crosshairText;
     }
 
     void ResetCrosshair()

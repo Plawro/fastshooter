@@ -10,6 +10,38 @@ public class GameController : MonoBehaviour
     public static GameController Instance { get; private set;}
     
     public bool gameStarted = false; // STARTS ENEMIES, ETC.
+
+
+    [Header("Intro")]
+    [SerializeField] GameObject[] tutorialTexts;
+    [SerializeField] TextMeshProUGUI[] tasks;
+    [SerializeField] TextMeshProUGUI taskTextTime;
+    [SerializeField] public GameObject van;
+    [SerializeField] public AudioSource vanSource;
+    public bool vanLeft = false;
+    public bool touchedVan = false;
+    public bool vanHereAgain = false;
+    public bool introTextsOn = false;
+
+    public void RemoveTutorial(){
+        vanLeft = true;
+        tasks[0].color = Color.green;
+        canMove = false;
+        vanSource.Play();
+        StartCoroutine(FadeOut());
+        StartCoroutine(HideVan());
+    }
+
+    IEnumerator HideVan(){
+        yield return new WaitForSeconds(8);
+        van.SetActive(false);
+        foreach(GameObject text in tutorialTexts){
+            text.SetActive(false);
+        }
+        StartCoroutine(FadeIn());
+        canMove = true;
+        yield break;
+    }
     
 
     [Header("Generator stuff")]
@@ -22,6 +54,10 @@ public class GameController : MonoBehaviour
     [SerializeField] public PauseMenu pauseMenu;
     [SerializeField] public PlayerInteractions playerInteractions;
     [SerializeField] public GameObject exitScreenButton;
+    [SerializeField] public RectTransform timeMenu;
+    Vector2 hiddenPos = new Vector2(-370,-90);
+    Vector2 visiblePos = new Vector2(-170,-90);
+    bool isOpen;
 
     [Header("Jumpscare related")]
     public CinemachineVirtualCamera jumpscareCameraFollower;
@@ -56,9 +92,88 @@ public class GameController : MonoBehaviour
     private Vector3 inventoryOffset = new Vector3(-0.7f,-0.7f,1.25f);
     [SerializeField] AmbientController ambient;
     public bool canMove;
+    int gameTime = 20 * 60; // 20:00
+    [SerializeField] AudioSource lightAudioSource;
+    [SerializeField] AudioClip lightsOff;
+    [SerializeField] AudioClip lightsOn;
 
-    void Start(){
+    void Start(){ // Player must survive until 6:00 and also must do all the tasks until that time
+        van.SetActive(true); // On start tutorial, after tutorial, interact with it to make it go away and start the game
         canMove = true;
+        timeMenu.anchoredPosition = hiddenPos;
+        isOpen = false;
+        timeMenu.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "20:00";
+        gameTime = 20 * 60;
+        StartCoroutine(ClockCoroutine());
+    }
+
+    string LeadingZero (int n){
+     return n.ToString().PadLeft(2, '0');
+    }
+
+    [SerializeField] AmbientController ambientController;
+    Coroutine ambientVictory;
+    private IEnumerator ClockCoroutine()
+    {
+        while (true)
+        {
+            if (gameStarted)
+            {
+                string hours = LeadingZero(gameTime / 60);  // Get hours
+                string minutes = LeadingZero(gameTime % 60);  // Get minutes
+
+                // Round minutes to the nearest 10
+                minutes = ((gameTime % 60 / 10) * 10).ToString();
+                if(minutes == "0"){
+                    minutes = "00";
+                }
+
+                timeMenu.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = $"{hours}:{minutes}";
+
+                if (gameTime / 60 == 6 && gameTime % 60 == 0)
+                {
+                        taskTextTime.color = Color.green;
+                        if(ambientVictory == null){
+                            GameController.Instance.van.SetActive(true);
+                            GameController.Instance.vanHereAgain = true;
+                            ambientVictory = StartCoroutine(ambientController.VanIsHere()); // V 6:00 se spusti
+                        }
+                    yield break; // Stop the coroutine when the event happens
+                }
+
+                yield return new WaitForSeconds(45f); // 45s = +30mins -> 15 minutes until 6:00
+
+                gameTime += 30; // Increase time in 10-minute steps
+
+                // Ensure time wraps around at midnight (24:00 → 00:00)
+                if (gameTime >= 24 * 60)
+                    gameTime = 0;
+            }
+            else
+            {
+                yield return null; // Wait until gameStarted is true
+            }
+        }
+    }
+
+    void Update(){
+        if (Input.GetKey(KeyCode.Tab)) // Change key if needed
+        {
+            isOpen = true;
+        }
+        else
+        {
+            isOpen = false;
+        }
+
+        if(timeMenu.anchoredPosition.x <= -179 || !isOpen){
+        timeMenu.anchoredPosition = Vector2.Lerp(
+            timeMenu.anchoredPosition,
+            isOpen ? visiblePos : hiddenPos,
+            Time.deltaTime * 8
+        );
+        }
+
     }
 
     void Awake()
@@ -100,13 +215,30 @@ public class GameController : MonoBehaviour
         isGeneratorDead = false;
         SwitchAllLights(true);
     }
-    
+    Coroutine playLightSound;
     public void SwitchAllLights(bool turnMode){
+        if(playLightSound == null){
+            playLightSound = StartCoroutine(PlayLightSound(turnMode));
+        }
+
         foreach (var light in lights){
             light.gameObject.SetActive(turnMode);
             light.gameObject.transform.parent.GetComponent<Renderer>().material.color = Color.black;
             light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.black);
         }
+    }
+
+    IEnumerator PlayLightSound(bool turnMode){
+        if(turnMode && !playerObject.gameObject.activeSelf){
+            print("1");
+            lightAudioSource.PlayOneShot(lightsOn);
+        }else if(!turnMode && !playerObject.gameObject.activeSelf){
+            print("2");
+            lightAudioSource.PlayOneShot(lightsOff);
+        }
+        playLightSound = null;
+        yield return new WaitForSeconds(0.2f);
+        yield break;
     }
 
     public void SwitchAllLightsColored(Color turnMode){

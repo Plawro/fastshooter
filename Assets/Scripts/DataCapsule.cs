@@ -10,6 +10,7 @@ public class DataCapsule : MonoBehaviour
     public GameObject indicator;
     public TextMeshProUGUI numberText;
     public int number;
+    Coroutine alreadyBlinking;
     
     void Start(){
         numberText.text = number.ToString();
@@ -30,15 +31,26 @@ public class DataCapsule : MonoBehaviour
         mode = whatMode;
         if(mode == 3){
             indicator.GetComponent<Renderer>().material.color = new Color(255, 0, 0);
-            StopCoroutine(Blink());
+            if(alreadyBlinking != null){
+                StopCoroutine(alreadyBlinking);
+                alreadyBlinking = null;
+            }
         }else if(mode == 1){
-            StartCoroutine(Blink());
+            if(alreadyBlinking == null){
+                alreadyBlinking = StartCoroutine(Blink());
+            }
         }else if(mode == 2){
             indicator.GetComponent<Renderer>().material.color = new Color(0, 255, 0);
-            StopCoroutine(Blink());
+            if(alreadyBlinking != null){
+                StopCoroutine(alreadyBlinking);
+                alreadyBlinking = null;
+            }
         }else{
             indicator.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
-            StopCoroutine(Blink());
+            if(alreadyBlinking != null){
+                StopCoroutine(alreadyBlinking);
+                alreadyBlinking = null;
+            }
         }
     }
 

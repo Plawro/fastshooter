@@ -63,6 +63,7 @@ public class PlayerController : MonoBehaviour
 
     float rotationZ;
     bool canStartBobbing;
+    float movementDirectionY;
 
     // SETTINGS
     public float lookSpeed = 2f;
@@ -83,24 +84,24 @@ public class PlayerController : MonoBehaviour
     void Update()
     { 
         //##2 Movement
-        Vector3 forward = transform.TransformDirection(Vector3.forward);
-        Vector3 right = transform.TransformDirection(Vector3.right);
-
-        // Running
-        bool isRunning = Input.GetKey(KeyCode.LeftShift); // Next 2 lines slowly match running speed
-        float targetSpeedX = (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Vertical");
-        float targetSpeedY = (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Horizontal");
-
-        // Main movement control
-        curSpeedX = Mathf.MoveTowards(curSpeedX, targetSpeedX, (isRunning ? acceleration : deceleration) * Time.deltaTime);
-        curSpeedY = Mathf.MoveTowards(curSpeedY, targetSpeedY, (isRunning ? acceleration : deceleration) * Time.deltaTime);
-        curSpeedX = Mathf.Clamp(curSpeedX, -maxSpeed, maxSpeed);
-        curSpeedY = Mathf.Clamp(curSpeedY, -maxSpeed, maxSpeed);
-
-        float movementDirectionY = moveDirection.y;
-
-        if (canMove)
+        if (canMove && GameController.Instance.canMove && !GameController.Instance.IsGamePaused())
         {
+            Vector3 forward = transform.TransformDirection(Vector3.forward);
+            Vector3 right = transform.TransformDirection(Vector3.right);
+
+            // Running
+            bool isRunning = Input.GetKey(KeyCode.LeftShift); // Next 2 lines slowly match running speed
+            float targetSpeedX = (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Vertical");
+            float targetSpeedY = (isRunning ? runSpeed : walkSpeed) * Input.GetAxis("Horizontal");
+
+            // Main movement control
+            curSpeedX = Mathf.MoveTowards(curSpeedX, targetSpeedX, (isRunning ? acceleration : deceleration) * Time.deltaTime);
+            curSpeedY = Mathf.MoveTowards(curSpeedY, targetSpeedY, (isRunning ? acceleration : deceleration) * Time.deltaTime);
+            curSpeedX = Mathf.Clamp(curSpeedX, -maxSpeed, maxSpeed);
+            curSpeedY = Mathf.Clamp(curSpeedY, -maxSpeed, maxSpeed);
+
+            movementDirectionY = moveDirection.y;
+        
             // Calculate the movement direction
             moveDirection = (forward * curSpeedX) + (right * curSpeedY);
 
@@ -110,10 +111,13 @@ public class PlayerController : MonoBehaviour
                 moveDirection.Normalize();
                 moveDirection *= isRunning ? runSpeed : walkSpeed; // Apply the correct speed after normalization
             }
+        }else{
+            moveDirection = Vector3.zero;
+
         }
 
         // Jump controller
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
+        if (Input.GetButton("Jump") && canMove && characterController.isGrounded && !GameController.Instance.IsGamePaused() && canMove && GameController.Instance.canMove)
         {
             moveDirection.y = jumpPower;
         }
@@ -129,7 +133,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Crouch control
-        if (Input.GetKey(KeyCode.LeftControl) && canMove)
+        if (Input.GetKey(KeyCode.LeftControl) && canMove && !GameController.Instance.IsGamePaused() && canMove && GameController.Instance.canMove)
         {
             characterController.height = crouchHeight;
             walkSpeed = crouchSpeed; // Sets new walk & run speeds for crouch mode
@@ -157,7 +161,7 @@ public class PlayerController : MonoBehaviour
         // Camera rotation (and body rotation)
         rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
         rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-        if(canMove && !GameController.Instance.IsGamePaused()){
+        if(canMove && !GameController.Instance.IsGamePaused() && canMove && GameController.Instance.canMove){
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }

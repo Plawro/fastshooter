@@ -12,7 +12,7 @@ public class PlayerInteractions : MonoBehaviour
     public PowerPlantController powerPlantController;
     public StatsScreen statsScreen;
     public Camera mainCamera;
-    public float lookDistance = 5f;
+    public float lookDistance = 10f;
 
     private bool isUsingVirtualCamera = false;
 
@@ -75,6 +75,16 @@ public class PlayerInteractions : MonoBehaviour
                     crosshair.text = crosshairText;
                     if (Input.GetKeyDown(KeyCode.E)) {
                         statsScreen.BreakAntenna();
+                    }
+                }
+            }else if (hit.transform.name == "Van") {
+                crosshairText = "[E] Interact";
+                crosshair.text = crosshairText;
+                if (Input.GetKey(KeyCode.E)) {
+                    if(!GameController.Instance.vanHereAgain){
+                        GameController.Instance.RemoveTutorial();
+                    }else{
+                        GameController.Instance.touchedVan = true;
                     }
                 }
             }else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null){ // Any interactable door, to fix "curtain bug" - add option for doorcontroller and istrigger collider on main object - when opened

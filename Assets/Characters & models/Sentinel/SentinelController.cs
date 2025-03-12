@@ -213,6 +213,7 @@ public class SentinelController : MonoBehaviour
         float countdown = 10f;
         float timeInHallway = 0f;
         isMovingToRoom = false;
+        
         while (countdown > 0f){
             countdown -= Time.deltaTime;
 
@@ -227,7 +228,12 @@ public class SentinelController : MonoBehaviour
                 timeInHallway = 0f;
             }
 
+            if(countdown <= 3 && countdown >0){
+                GameController.Instance.SwitchAllLights(false);
+            }
+
             if (countdown <= 0f){
+                GameController.Instance.SwitchAllLights(true);
                 if (GameController.Instance.playerTower.gameObject.activeSelf){
                     StartCoroutine(doorTower.OpenCloseDoor());
                     sentinelRoom.transform.localPosition = new Vector3(22.538f,0,-4.2f);
@@ -294,48 +300,71 @@ public class SentinelController : MonoBehaviour
     }
 
     IEnumerator CheckPlayer()
+{
+    yield return new WaitForSeconds(2f); // Small delay before checking
+
+    float timeLookingAtSentinel = 0f;
+    float requiredTime = 6f;
+    audioSource.PlayOneShot(checking);
+
+    bool playerWasInTower = GameController.Instance.playerTower.gameObject.activeSelf;
+    bool playerWasInPowerPlant = GameController.Instance.playerPowerPlant.gameObject.activeSelf;
+
+    while (timeLookingAtSentinel < requiredTime)
     {
-        yield return new WaitForSeconds(2f); // Wait 2 seconds before checking
-        float timeLookingAtSentinel = 0f;
-        float requiredTime = 6f;
-        audioSource.PlayOneShot(checking);
-        while (timeLookingAtSentinel < requiredTime)
+        if (!isOnline)
         {
-
-            if (!isOnline || !GameController.Instance.playerPowerPlant.gameObject.activeSelf || !GameController.Instance.playerTower.gameObject.activeSelf)
-            {
-                yield break; // Stop checking if Sentinel is charging
-            }
-            // Get direction from player to Sentinel
-            Vector3 directionToSentinel = (this.transform.position - playerCamera.transform.position).normalized;
-
-            // Get the player's forward direction
-            Vector3 playerForward = playerCamera.transform.forward;
-
-            // Check dot product to determine if player is looking at Sentinel
-            float dot = Vector3.Dot(playerForward, directionToSentinel);
-            bool isLookingAtSentinel = dot > 0.15f && dot < 0.4f;
-            print(dot + " " + timeLookingAtSentinel);
-            if (isLookingAtSentinel)
-            {
-                timeLookingAtSentinel += Time.deltaTime; // Increase timer if looking
-            }
-            else
-            {
-                print("jumpscare");
-                Jumpscare(); // Player looked away, trigger jumpscare
-                yield break; // Stop coroutine
-            }
-
-            yield return null; // Wait for next frame
+            yield break;
         }
-        timeLookingAtSentinel = 0;
-        StartCoroutine(doorPowerPlant.OpenCloseDoor());
-        ResetFootstep();
-        footstepAmmount = 0;
-        playerCheck = null;
-        sentinelRoom.SetActive(false);
-        yield break;
+
+        // Get player's current position
+        bool playerInTower = GameController.Instance.playerTower.gameObject.activeSelf;
+        bool playerInPowerPlant = GameController.Instance.playerPowerPlant.gameObject.activeSelf;
+        bool playerInHallway = GameController.Instance.playerHallway.gameObject.activeSelf; // Consider hallway safe
+
+        // **Check if player LEFT the room completely**
+        if ((playerWasInTower && !playerInTower && !playerInHallway) || 
+            (playerWasInPowerPlant && !playerInPowerPlant && !playerInHallway))
+        {
+            print("Player left the room. Jumpscare!");
+            Jumpscare();
+            yield break;
+        }
+
+        // **Looking direction check**
+        Vector3 directionToSentinel = (this.transform.position - playerCamera.transform.position).normalized;
+        Vector3 playerForward = playerCamera.transform.forward;
+        float dot = Vector3.Dot(playerForward, directionToSentinel);
+        bool isLookingAtSentinel = dot > -0.4f && dot < 0.4f;
+        print(dot);
+        if (isLookingAtSentinel)
+        {
+            timeLookingAtSentinel += 0.2f; // Increase timer slower to smooth out flickers
+        }
+        else
+        {
+            timeLookingAtSentinel -= 0.5f; // Give the player a grace period before jumpscare
+            if (timeLookingAtSentinel <= 0)
+            {
+                print("Player looked away too long. Jumpscare!");
+                Jumpscare();
+                yield break;
+            }
+        }
+
+        yield return new WaitForSeconds(0.2f); // **Optimized to run 5 times per second instead of every frame**
     }
+
+    // **Player survived, Sentinel leaves**
+    print("Player stared long enough, Sentinel leaves.");
+    StartCoroutine(doorPowerPlant.OpenCloseDoor());
+    ResetFootstep();
+    footstepAmmount = 0;
+    playerCheck = null;
+    sentinelRoom.SetActive(false);
+}
+
+
+
 
 }

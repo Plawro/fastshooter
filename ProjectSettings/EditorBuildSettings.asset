@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TheEnd.unity
     guid: 63fe235b0c75f6d4fab81a7c304774c9
+  - enabled: 1
+    path: Assets/Scenes/Victory.unity
+    guid: 28fad358c1080a64abd727fce66b0ee0
   m_configObjects: {}

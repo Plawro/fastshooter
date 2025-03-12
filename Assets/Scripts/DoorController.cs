@@ -71,8 +71,8 @@ public class DoorController : MonoBehaviour
     public IEnumerator OpenCloseDoor()
     {
         yield return StartCoroutine(RotateDoorOpen());  // Wait until OpenDoor() finishes
-        yield return StartCoroutine(RotateDoorClose()); // Then start CloseDoor()
         doorSoundSource.Play();
+        yield return StartCoroutine(RotateDoorClose()); // Then start CloseDoor()
         yield return null;
     }
     
@@ -148,7 +148,7 @@ public class DoorController : MonoBehaviour
 
         while (Mathf.Abs(currentAngle) < Mathf.Abs(targetAngle))
         {
-            float step = 180f * Time.deltaTime;
+            float step = 180f * Time.deltaTime *2;
             door1.transform.Rotate(Vector3.up, step * Mathf.Sign(targetAngle));
             currentAngle += step * Mathf.Sign(targetAngle);
             yield return null;
@@ -158,12 +158,12 @@ public class DoorController : MonoBehaviour
 
     private IEnumerator RotateDoorClose()
     {
-        float tolerance = 0.1f;
+        float tolerance = 0.3f;
         float targetAngle = 0f;
 
         while (Mathf.Abs(currentAngle) > tolerance)
         {
-            float step = 180f * Time.deltaTime;
+            float step = 180f * Time.deltaTime *2;
             door1.transform.Rotate(Vector3.up, -step * Mathf.Sign(currentAngle));
             currentAngle -= step * Mathf.Sign(currentAngle);
             yield return null;

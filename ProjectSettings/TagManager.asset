@@ -10,6 +10,7 @@ TagManager:
   - Door
   - ItemHolder
   - StationCenter
+  - IgnoreRaycast
   layers:
   - Default
   - TransparentFX

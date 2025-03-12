@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class AmbientController : MonoBehaviour
@@ -24,15 +25,47 @@ public class AmbientController : MonoBehaviour
     bool stormStarted = false;
 
     [SerializeField] GameObject exitSign;
+    float scarySoundTimer = 0;
 
     void Start()
     {
+        scarySoundTimer = Random.Range(40, 100);
         inAmbience.volume = 1;  // Ensure indoor starts muted when outside
         outAmbience.volume = 0;
         inAmbience.Play();
         outAmbience.Play();
         timeTillStorm = Random.Range(40, 210);
         dangerText.enabled = false;
+        if(SceneManager.GetActiveScene().name == "TheEnd" || SceneManager.GetActiveScene().name == "Victory"){
+            dangerText.alpha = 0;
+        }else{
+            dangerText.alpha = 255;
+        }
+    }
+    float timerVan;
+    bool countVanTimer;
+    public IEnumerator VanIsHere(){
+        countVanTimer = true;
+        Debug.Log("GG2");
+        dangerText.enabled = true;
+        dangerText.alpha = 255;
+        
+        while(timerVan <= 30){
+            if(dangerTextBlinking == null){
+                GameController.Instance.vanSource.Play();
+                dangerTextBlinking = StartCoroutine(DangerTextBlinking());
+            }
+
+            if(GameController.Instance.touchedVan){
+                GameController.Instance.FadeOut();
+                yield return new WaitForSeconds(1);
+                GameController.Instance.pauseMenu.Victory();
+                yield break;
+            }
+            yield return new WaitForSeconds(0.5f);
+        }
+        GameController.Instance.RemoveTutorial(); // He left
+        yield break;
     }
 
     private int indoorsCollidersTouched = 0;  // Track how many indoor colliders are touched
@@ -133,6 +166,7 @@ private void OnTriggerExit(Collider other)
 
 }
 */
+    [Header("Danger text")]
     [SerializeField] TextMeshProUGUI dangerText;
     Coroutine dangerTextBlinking;
     bool useText1 = true;
@@ -148,7 +182,7 @@ private void OnTriggerExit(Collider other)
 
             dangerText.alpha = 255;
             mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
-            if (stormLife != null && normalizedDistance >= 0.6f)
+            if (stormLife != null && normalizedDistance >= 0.75f)
             {
                 // Alternate between both messages
                 dangerText.text = "I AM DEAD";
@@ -157,21 +191,37 @@ private void OnTriggerExit(Collider other)
             {
                 dangerText.text = "I SHOULD GET BACK INSIDE QUICKLY";
             }
-            else if (normalizedDistance >= 0.6f)
+            else if (normalizedDistance >= 0.75f)
             {
                 dangerText.text = "I SHOULD RETURN BACK TO SAFETY";
+            }else if(timerVan <= 30){
+                dangerText.text = "Time is up. Get to the van fast.";
             }
 
             yield return new WaitForSeconds(0.1f);
         
     }
     }
+    [Header("Scary sounds")]
+    [SerializeField] AudioSource scarySoundSource;
+    [SerializeField] AudioClip[] scarySounds;
+    void PlayScarySound(){
+        if (!scarySoundSource.isPlaying){
+            scarySoundSource.PlayOneShot(scarySounds[Random.Range(0, scarySounds.Length)]);
+        }
+    }
+
+    [Header("Update")]
     [SerializeField] Volume volume;
     [SerializeField] GameObject centerObject;
     float normalizedDistance;
     float playerStormHP = 0;
+    float distance;
     public void Update()
-    {
+    {   
+        if(countVanTimer){
+            timerVan += Time.deltaTime;
+        }
         volume.weight = playerStormHP;
         if(GameController.Instance.gameStarted){
             if(timeTillStorm <= 0){
@@ -187,6 +237,12 @@ private void OnTriggerExit(Collider other)
 
         if (isIndoors)
         {
+            if(scarySoundTimer >= 0){
+                scarySoundTimer -= Time.deltaTime;
+            }else{
+                PlayScarySound();
+                scarySoundTimer = Random.Range(40, 100);
+            }
             playerStormHP = 0;
             if (RenderSettings.fogDensity > 0.055f)
             {
@@ -197,24 +253,29 @@ private void OnTriggerExit(Collider other)
 
                 skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), new Color(20 / 255f, 20 / 255f, 20 / 255f), transitionProgress));
             }
+            if(!countVanTimer){
             dangerText.enabled = false;
+            }
             //Remove darkening screen
         }
         else
         {
-            float distance = Vector3.Distance(centerObject.transform.position, GameController.Instance.playerCamera.transform.position);
+            if(centerObject != null && GameController.Instance.playerCamera != null){
+                distance = Vector3.Distance(centerObject.transform.position, GameController.Instance.playerCamera.transform.position);
+            }
+
             normalizedDistance =  Mathf.Clamp01(distance / 200f);
             if(normalizedDistance >= 1){
                 StartCoroutine(GameController.Instance.FadeOut());
                 StartCoroutine(KilledByStorm(2));
-            }else if (normalizedDistance >= 0.6f){
+            }else if (normalizedDistance >= 0.75f){
                 dangerText.text = "I SHOULD RETURN BACK TO SAFETY";
                 dangerText.enabled = true;
                 if(dangerTextBlinking == null){ // Or remove this for random blinking effect
                     dangerTextBlinking = StartCoroutine(DangerTextBlinking());
                 }
             }else{
-                if(stormLife == null){
+                if(stormLife == null && !countVanTimer){
                     dangerText.enabled = false;
                     dangerTextBlinking = null;
                 }
@@ -235,7 +296,7 @@ private void OnTriggerExit(Collider other)
                 }
                 //Coroutine blinking text start, start darkening the screen until player dies
             }else{
-                if (normalizedDistance <= 0.6f){
+                if (normalizedDistance <= 0.75f && !countVanTimer){
                     dangerText.enabled = false;
                     dangerTextBlinking = null;
                 }

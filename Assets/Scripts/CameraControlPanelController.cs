@@ -143,73 +143,73 @@ public class CameraControlPanelController : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, lookDistance, ~ignoreLayer) && !GameController.Instance.IsGamePaused())
         {
-            if(hit.transform.name == "ControlPanelCapsuleHolder"){
-                    if((leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()) || (rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>())){
-                        crosshairText = "Put " + (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "") + (rightHand.childCount > 0 && leftHand.childCount > 0 ? " or " : "") + (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "") + " into control panel";
-                        crosshair.text = crosshairText;
-                    }
-                    
-                    if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
-                        leftHand.GetChild(0).transform.parent = hit.transform;
-                        hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
-                        hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
-                    }
+            CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
+            if (hit.transform.name == "ControlPanelCapsuleHolder") {
+            bool hasLeftCapsule = leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>();
+            bool hasRightCapsule = rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>();
 
-                    if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
-                        rightHand.GetChild(0).transform.parent = hit.transform;
-                        hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
-                        hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, 90);
+            if (hasLeftCapsule || hasRightCapsule) {
+                if (isHoldingLeft || isHoldingRight) {
+                    // Show inserting progress
+                    float percentage = Mathf.Clamp((holdTimer / holdTimeRequired) * 100, 0, 100);
+                    crosshairText = $"Inserting {percentage:F0}%";
+                    
+                    if (percentage >= 100) {
+                        if (isHoldingLeft) {
+                            InsertCapsule(leftHand, hit.transform.gameObject);
+                        } else if (isHoldingRight) {
+                            InsertCapsule(rightHand, hit.transform.gameObject);
+                        }
                     }
+                } else {
+                    // Default text
+                    crosshairText = "Hold Left/Right Click to Insert " +
+                        (hasLeftCapsule ? leftHand.GetChild(0).name : "") +
+                        (hasRightCapsule && hasLeftCapsule ? " or " : "") +
+                        (hasRightCapsule ? rightHand.GetChild(0).name : "");
+                }
+                crosshair.text = crosshairText;
             }
 
-            if(hit.transform.name == "Datacapsule")
+            // Check for input
+            if (hasLeftCapsule && Input.GetKey(KeyCode.Mouse0)) {
+                isHoldingLeft = true;
+                holdTimer += Time.deltaTime;
+            } else if (hasRightCapsule && Input.GetKey(KeyCode.Mouse1)) {
+                isHoldingRight = true;
+                holdTimer += Time.deltaTime;
+            } else {
+                // Reset when key is released
+                isHoldingLeft = false;
+                isHoldingRight = false;
+                holdTimer = 0f;
+            }
+            }else if(hit.transform.name == "Datacapsule")
             {
                 HandlePickupable(hit);
-            }
-
-            CinemachineVirtualCamera foundCamera = hit.transform.GetComponentInChildren<CinemachineVirtualCamera>(true);
-            if (foundCamera != null)
+            }else
             {
-                string crosshairText = "Use";
-                crosshair.text = crosshairText;
-
-                
-
-                if(Input.GetKeyDown(KeyCode.E) | Input.GetKeyDown(KeyCode.Mouse0)){
-                    
-                    if (nowInteractingWith != "")
-                    {
-                        nowInteractingWith = "";
-                        SwitchToMainCamera();
-                        Cursor.lockState = CursorLockMode.None;
-                        Cursor.visible = true;
-                        crosshair.enabled = true;
-                    }
-                    else
-                    {
-                        if(hit.transform.name == "ControlPanel"){
-                            nowInteractingWith = "ControlPanel";
-                        }
-                        SwitchToVirtualCamera(foundCamera);
-                    }
-                }
-            }else if (hit.transform.parent != null && hit.transform.parent.GetComponent<DoorController>() != null)
-            {
-                HandleDoorInteraction(hit);
+                ResetCrosshair();
             }
-        }
-        else
-        {
-            ResetCrosshair();
         }
     }
 
+    private float holdTimer = 0f;
+    private bool isHoldingLeft = false;
+    private bool isHoldingRight = false;
+    private const float holdTimeRequired = 2f; // 2 seconds to reach 100%
 
-
-    void HandleDoorInteraction(RaycastHit hit)
-    {
-        crosshairText = "Go";
-        crosshair.text = crosshairText;
+    void InsertCapsule(Transform hand, GameObject hit) {
+        Transform capsule = hand.GetChild(0); // Get the capsule
+        capsule.parent = hit.transform; // Set the new parent
+        // Ensure the capsule is properly positioned
+        capsule.localPosition = Vector3.zero;
+        capsule.localRotation = Quaternion.Euler(90, 0, 90);
+        
+        // Reset variables after inserting
+        holdTimer = 0f;
+        isHoldingLeft = false;
+        isHoldingRight = false;
     }
 
     void ResetCrosshair()
