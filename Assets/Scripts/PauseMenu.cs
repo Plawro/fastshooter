@@ -32,8 +32,6 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] TextMeshProUGUI followerTitle;
     [SerializeField] GameObject driftText;
     [SerializeField] TextMeshProUGUI driftTitle;
-    [SerializeField] GameObject samosvalText;
-    [SerializeField] TextMeshProUGUI samosvalTitle;
     [SerializeField] GameObject sentinelText;
     [SerializeField] TextMeshProUGUI sentinelTitle;
 
@@ -224,12 +222,12 @@ public class PauseMenu : MonoBehaviour
                 if(entitySelected >= 1){
                     MainMenuChangeEntity(entitySelected);
                 }else{
-                    entitySelected = 4;
+                    entitySelected = 3;
                     MainMenuChangeEntity(entitySelected);
                 }
             }else if(Input.GetKeyDown(KeyCode.D) && !warning.activeSelf && !firstTimePlaying.activeSelf && entities.activeSelf){
                 entitySelected++;
-                if(entitySelected <= 4){
+                if(entitySelected <= 3){
                     MainMenuChangeEntity(entitySelected);
                 }else{
                     entitySelected = 1;
@@ -324,8 +322,6 @@ public class PauseMenu : MonoBehaviour
                 followerTitle.color = Color.white;
                 driftText.SetActive(false);
                 driftTitle.color = Color.gray;
-                samosvalText.SetActive(false);
-                samosvalTitle.color = Color.gray;
                 sentinelText.SetActive(false);
                 sentinelTitle.color = Color.gray;
             break;
@@ -334,8 +330,6 @@ public class PauseMenu : MonoBehaviour
                 followerTitle.color = Color.gray;
                 driftText.SetActive(true);
                 driftTitle.color = Color.white;
-                samosvalText.SetActive(false);
-                samosvalTitle.color = Color.gray;
                 sentinelText.SetActive(false);
                 sentinelTitle.color = Color.gray;
             break;
@@ -344,18 +338,6 @@ public class PauseMenu : MonoBehaviour
                 followerTitle.color = Color.gray;
                 driftText.SetActive(false);
                 driftTitle.color = Color.gray;
-                samosvalText.SetActive(true);
-                samosvalTitle.color = Color.white;
-                sentinelText.SetActive(false);
-                sentinelTitle.color = Color.gray;
-            break;
-            case 4:
-                followerText.SetActive(false);
-                followerTitle.color = Color.gray;
-                driftText.SetActive(false);
-                driftTitle.color = Color.gray;
-                samosvalText.SetActive(false);
-                samosvalTitle.color = Color.gray;
                 sentinelText.SetActive(true);
                 sentinelTitle.color = Color.white;
             break;
@@ -448,6 +430,7 @@ public class PauseMenu : MonoBehaviour
     void PauseGame(){
         if(canBePaused){
             StartCoroutine(ambientCont.FadeOutBoth());
+            AudioListener.pause = true;
             pauseMenu.SetActive(true);
             Time.timeScale = 0f;
             isPaused = true;
@@ -458,6 +441,7 @@ public class PauseMenu : MonoBehaviour
 
     void ResumeGame(){
         StartCoroutine(ambientCont.FadeBackIn());
+        AudioListener.pause = false;
         pauseMenu.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;

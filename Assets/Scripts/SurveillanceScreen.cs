@@ -12,6 +12,7 @@ public class SurveillanceScreen : MonoBehaviour
     public Image centerMiddleWarning;
     public Image center2Warning;
     public Image rightWarning;
+    [SerializeField] AudioSource audioSource;
 
     public void TriggerWarning(int position)
 {
@@ -43,6 +44,7 @@ void Start(){
     centerWarning.enabled = false;
     centerMiddleWarning.enabled = false;
     center2Warning.enabled = false;
+    audioSource.Play();
 }
 
 IEnumerator FlashWarning(Image image)

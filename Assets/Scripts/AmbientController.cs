@@ -22,7 +22,7 @@ public class AmbientController : MonoBehaviour
     private bool previousIsOtherPlaying = false;
     public Material skyboxMaterial;
     float timeTillStorm;
-    bool stormStarted = false;
+    public bool stormStarted = false;
 
     [SerializeField] GameObject exitSign;
     float scarySoundTimer = 0;
@@ -92,6 +92,10 @@ public class AmbientController : MonoBehaviour
             exitSign.transform.GetChild(1).GetComponent<Light>().color = Color.black;
             exitSign.transform.GetChild(2).transform.GetChild(0).GetComponent<Image>().color = Color.black;
             yield return new WaitForSeconds(1);
+        }
+        foreach (var light in GameController.Instance.lights){
+            light.gameObject.transform.parent.GetComponent<Renderer>().material.color = new Color(247, 243, 145);
+            light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color(191, 187, 144));
         }
         exitSign.transform.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.green);
         exitSign.GetComponent<Renderer>().material.color = Color.green;

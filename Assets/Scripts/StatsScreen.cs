@@ -65,9 +65,9 @@ public class StatsScreen : MonoBehaviour
     void MoveArrow()
     {
         if(arrow.transform.localPosition.x <= -280){
-            moveDir = 20;
+            moveDir = 10;
         }else if(arrow.transform.localPosition.x >= 280){
-            moveDir = -20;
+            moveDir = -10;
         }
 
         arrow.transform.localPosition = new Vector2(arrow.transform.localPosition.x+moveDir, 141f);

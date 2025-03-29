@@ -45,7 +45,7 @@ public class GameController : MonoBehaviour
     
 
     [Header("Generator stuff")]
-    [SerializeField] private GameObject[] lights;
+    [SerializeField] public GameObject[] lights;
     [SerializeField] public bool isGeneratorDead = false;
 
 
@@ -81,7 +81,7 @@ public class GameController : MonoBehaviour
     [SerializeField] public Transform playerControlPanel;
     private Vector3 controlPanelRot = new Vector3(0,0,0);
     [SerializeField] public CinemachineVirtualCamera playerCamera;
-    [SerializeField] Transform playerObject; // Enable or disable outside body
+    [SerializeField] public Transform playerObject; // Enable or disable outside body
     [SerializeField] public Collider walkInsideCollider;
     [SerializeField] Transform playerSpawnPoint;
     [SerializeField] DoorController mainDoorCont;
@@ -96,6 +96,8 @@ public class GameController : MonoBehaviour
     [SerializeField] AudioSource lightAudioSource;
     [SerializeField] AudioClip lightsOff;
     [SerializeField] AudioClip lightsOn;
+    [SerializeField] public AudioSource door;
+    [SerializeField] public AudioClip doorSound;
 
     void Start(){ // Player must survive until 6:00 and also must do all the tasks until that time
         van.SetActive(true); // On start tutorial, after tutorial, interact with it to make it go away and start the game
@@ -205,39 +207,70 @@ public class GameController : MonoBehaviour
         GameController.Instance.exitScreenButton.SetActive(false);
     }
 
-
+    [SerializeField] GameObject[] turnOffItems;
     public void KillGenerator(){
         isGeneratorDead = true;
         SwitchAllLights(false);
+        foreach (var turnOff in turnOffItems){
+            turnOff.SetActive(false);
+        }
     }
 
     public void ReviveGenerator(){
         isGeneratorDead = false;
         SwitchAllLights(true);
+        foreach (var turnOff in turnOffItems){
+            turnOff.SetActive(true);
+        }
     }
+    bool playedSound = false;
+    bool lastPlayed = false;
     Coroutine playLightSound;
     public void SwitchAllLights(bool turnMode){
-        if(playLightSound == null){
-            playLightSound = StartCoroutine(PlayLightSound(turnMode));
-        }
+        if(turnMode){
+            if(!isGeneratorDead){
+                if(playLightSound == null && (playedSound == false || lastPlayed != turnMode)){
+                    playLightSound = StartCoroutine(PlayLightSound(turnMode)); 
+                    playedSound = true;
+                }
+                lastPlayed = turnMode;
+                foreach (var light in lights){
+                    light.gameObject.SetActive(turnMode);
+                    if(ambientController.stormStarted){
+                        light.gameObject.transform.parent.GetComponent<Renderer>().material.color = Color.red;
+                        light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.red);
+                    }else{
+                        light.gameObject.transform.parent.GetComponent<Renderer>().material.color = new Color(247, 243, 145);
+                        light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color(191, 187, 144));
+                    }
+                }
+                playedSound = false;
+            }
+        }else{
+            if(playLightSound == null){
+                playLightSound = StartCoroutine(PlayLightSound(turnMode));
+            }
 
-        foreach (var light in lights){
-            light.gameObject.SetActive(turnMode);
-            light.gameObject.transform.parent.GetComponent<Renderer>().material.color = Color.black;
-            light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.black);
+            foreach (var light in lights){
+                light.gameObject.SetActive(turnMode);
+                light.gameObject.transform.parent.GetComponent<Renderer>().material.color = Color.black;
+                light.gameObject.transform.parent.GetComponent<Renderer>().material.SetColor("_EmissionColor", Color.black);
+            }
         }
+    }
+
+    public void PlayOnLightsSound(){
+        StartCoroutine(PlayLightSound(true));
     }
 
     IEnumerator PlayLightSound(bool turnMode){
         if(turnMode && !playerObject.gameObject.activeSelf){
-            print("1");
             lightAudioSource.PlayOneShot(lightsOn);
         }else if(!turnMode && !playerObject.gameObject.activeSelf){
-            print("2");
             lightAudioSource.PlayOneShot(lightsOff);
         }
         playLightSound = null;
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.1f);
         yield break;
     }
 
@@ -286,13 +319,13 @@ public class GameController : MonoBehaviour
     yield return StartCoroutine(FadeIn());
     }
 
-    public void SwitchModeHallway(bool fadeOut)
+    public void SwitchModeHallway(bool fadeOut, bool playDoorSound)
     {
-        StartCoroutine(SwitchModeHallwayCoroutine(fadeOut));
+        StartCoroutine(SwitchModeHallwayCoroutine(fadeOut, playDoorSound));
     }
 
 
-    private IEnumerator SwitchModeHallwayCoroutine(bool fadeOut)
+    private IEnumerator SwitchModeHallwayCoroutine(bool fadeOut, bool playDoorSound)
     {
         if(fadeOut){
             yield return StartCoroutine(FadeOut());
@@ -318,6 +351,9 @@ public class GameController : MonoBehaviour
             Cursor.visible = true;
             crosshair.enabled = false;
             if(fadeOut){
+                if(playDoorSound){
+                    door.PlayOneShot(doorSound);
+                }
                 yield return new WaitForSeconds(1);
                 if(!ambient.isIndoors){
                     ambient.SetInside();
@@ -357,6 +393,7 @@ public class GameController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             crosshair.enabled = false;
+            door.PlayOneShot(doorSound);
     yield return new WaitForSeconds(0.5f);
     yield return StartCoroutine(FadeIn());
     }
@@ -390,6 +427,7 @@ public class GameController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             crosshair.enabled = false;
+            door.PlayOneShot(doorSound);
         yield return new WaitForSeconds(0.5f);
         yield return StartCoroutine(FadeIn());
     }

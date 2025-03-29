@@ -129,7 +129,7 @@ public class CameraControlPanelController : MonoBehaviour
         
         }else{
             if(Input.GetKey(KeyCode.W) && GameController.Instance.canMove && flashCoroutine == null){
-                GameController.Instance.SwitchModeHallway(true);
+                GameController.Instance.SwitchModeHallway(true, false);
             }
 
             if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove && flashCoroutine == null){

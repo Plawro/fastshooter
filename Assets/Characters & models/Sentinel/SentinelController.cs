@@ -7,9 +7,10 @@ public class SentinelController : MonoBehaviour
 {
     float timeTillBoot;
     float timeTillFootstep;
-    Vector3 lookAtPlayerHeadRot = new Vector3(326.608459f,55.8295555f,347.688599f);
-    Vector3 normalLookHeadRot = new Vector3(3.03034806f,5.1711669f,0.717486799f);
+    Vector3 lookAtPlayerHeadRot = new Vector3(272.69986f,201.150116f,173.773285f);
+    Vector3 normalLookHeadRot = new Vector3(305.309998f,270f,90f);
     [SerializeField] GameObject head;
+    [SerializeField] GameObject headPlayer;
     [SerializeField] GameObject lightToFlicker;
     Coroutine flickerLight;
     bool preBoot = true;
@@ -25,6 +26,7 @@ public class SentinelController : MonoBehaviour
     [SerializeField] AudioClip jumpscareSound;
     [SerializeField] AudioClip checking;
     [SerializeField] Camera playerCamera;
+    [SerializeField] Transform roomCamera;
     [SerializeField] PowerPlantController powerPlantController;
     int footstepAmmount = 0;
     float charge = 80;
@@ -68,7 +70,8 @@ public class SentinelController : MonoBehaviour
     }
 
     void TurnOff(){
-        head.transform.eulerAngles = normalLookHeadRot;
+        head.gameObject.SetActive(true);
+        headPlayer.gameObject.SetActive(false);
         preBoot = true;
         Boot();
     }
@@ -78,16 +81,22 @@ public class SentinelController : MonoBehaviour
         StartCoroutine(BootSentinel());
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.01f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         yield return new WaitForSeconds(0.05f);
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.02f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
+        
         yield break;
     }
 
     IEnumerator BootSentinel(){
-        head.transform.eulerAngles = lookAtPlayerHeadRot;
+        head.gameObject.SetActive(false);
+        headPlayer.gameObject.SetActive(true);
         isOnline = false;
         for (int i = 0; i < 3; i++)
         {
@@ -113,11 +122,15 @@ public class SentinelController : MonoBehaviour
         yield return new WaitForSeconds(3f);
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.01f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         yield return new WaitForSeconds(0.05f);
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.02f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         yield return new WaitForSeconds(0.02f);
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.5f);
@@ -127,7 +140,9 @@ public class SentinelController : MonoBehaviour
         charge = 6;
         StartCoroutine(doorPowerPlant.OpenCloseDoor());
         yield return new WaitForSeconds(0.5f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         isOnline = false;
             while (charge < 85 && isOnline == false)
             {
@@ -144,18 +159,24 @@ public class SentinelController : MonoBehaviour
     IEnumerator StartSentinel(){
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.01f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         yield return new WaitForSeconds(0.05f);
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.02f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         yield return new WaitForSeconds(0.02f);
         lightToFlicker.SetActive(false);
         yield return new WaitForSeconds(0.5f);
         sentinelOff.SetActive(false);
         StartCoroutine(doorPowerPlant.OpenCloseDoor());
         yield return new WaitForSeconds(0.5f);
+        if(!GameController.Instance.isGeneratorDead){
         lightToFlicker.SetActive(true);
+        }
         isOnline = true;
         timeTillFootstep = Random.Range(7,20);
         footstepAmmount = 0;
@@ -169,6 +190,7 @@ public class SentinelController : MonoBehaviour
         if(!audioSource.isPlaying){
             audioSource.PlayOneShot(jumpscareSound);
         }
+        sentinelRoom.transform.Find("Virtual Camera").gameObject.SetActive(true);
         GameController.Instance.Jumpscare("Sentinel");
     }
 
@@ -233,11 +255,12 @@ public class SentinelController : MonoBehaviour
             }
 
             if (countdown <= 0f){
-                GameController.Instance.SwitchAllLights(true);
+                    GameController.Instance.SwitchAllLights(true);
+                    GameController.Instance.PlayOnLightsSound();
                 if (GameController.Instance.playerTower.gameObject.activeSelf){
                     StartCoroutine(doorTower.OpenCloseDoor());
-                    sentinelRoom.transform.localPosition = new Vector3(22.538f,0,-4.2f);
-                    sentinelRoom.transform.eulerAngles = new Vector3(0,180,0);
+                    sentinelRoom.transform.localPosition = new Vector3(22.2630005f,-1.20899963f,-3.44000244f);
+                    sentinelRoom.transform.eulerAngles = new Vector3(0,-90,0);
                     sentinelRoom.SetActive(true);
                     sentinelHallway.SetActive(false);
                     if(playerCheck != null){
@@ -249,8 +272,8 @@ public class SentinelController : MonoBehaviour
                     yield break;
                 } else if (GameController.Instance.playerPowerPlant.gameObject.activeSelf){
                     StartCoroutine(doorPowerPlant.OpenCloseDoor());
-                    sentinelRoom.transform.localPosition = new Vector3(22.538f,0,4.2f);
-                    sentinelRoom.transform.eulerAngles = new Vector3(0,0,0);
+                    sentinelRoom.transform.localPosition = new Vector3(22.2630005f,-1.20899963f,3.44000244f);
+                    sentinelRoom.transform.eulerAngles = new Vector3(0,90,0);
                     sentinelRoom.SetActive(true);
                     sentinelHallway.SetActive(false);
                     if(playerCheck != null){
@@ -272,6 +295,7 @@ public class SentinelController : MonoBehaviour
                         if(playerCheck != null){
                             StopCoroutine(playerCheck);
                         }
+                        print("GONE1");
                         yield return playerCheck = StartCoroutine(CheckPlayer());
                         yield return new WaitForSeconds(5);
                         GetOffRoom("tower");
@@ -285,6 +309,7 @@ public class SentinelController : MonoBehaviour
                         if(playerCheck != null){
                             StopCoroutine(playerCheck);
                         }
+                        print("GONE2");
                         yield return playerCheck = StartCoroutine(CheckPlayer());
                         yield return new WaitForSeconds(5);
                         powerPlantController.RestartGenerator();
@@ -317,6 +342,13 @@ public class SentinelController : MonoBehaviour
             yield break;
         }
 
+
+        /*if (!playerWasInTower || !playerWasInPowerPlant)
+        {
+            print("GONE");
+            yield break;
+        }*/
+
         // Get player's current position
         bool playerInTower = GameController.Instance.playerTower.gameObject.activeSelf;
         bool playerInPowerPlant = GameController.Instance.playerPowerPlant.gameObject.activeSelf;
@@ -335,15 +367,17 @@ public class SentinelController : MonoBehaviour
         Vector3 directionToSentinel = (this.transform.position - playerCamera.transform.position).normalized;
         Vector3 playerForward = playerCamera.transform.forward;
         float dot = Vector3.Dot(playerForward, directionToSentinel);
-        bool isLookingAtSentinel = dot > -0.4f && dot < 0.4f;
+        bool isLookingAtSentinel = dot > -0.2f && dot < 0.4f;
         print(dot);
         if (isLookingAtSentinel)
         {
+
             timeLookingAtSentinel += 0.2f; // Increase timer slower to smooth out flickers
         }
         else
         {
-            timeLookingAtSentinel -= 0.5f; // Give the player a grace period before jumpscare
+            
+            timeLookingAtSentinel -= 1f; // Give the player a grace period before jumpscare
             if (timeLookingAtSentinel <= 0)
             {
                 print("Player looked away too long. Jumpscare!");

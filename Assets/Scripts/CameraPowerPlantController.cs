@@ -108,7 +108,7 @@ public class CameraPowerPlantController : MonoBehaviour
         }
         }else{
             if(Input.GetKeyDown(KeyCode.W) && GameController.Instance.canMove){
-                GameController.Instance.SwitchModeHallway(true);
+                GameController.Instance.SwitchModeHallway(true,true);
             }
 
             if(Input.GetKeyDown(KeyCode.S) && GameController.Instance.canMove){

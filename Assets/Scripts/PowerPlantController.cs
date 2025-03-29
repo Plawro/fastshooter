@@ -35,6 +35,7 @@ public class PowerPlantController : MonoBehaviour
     public RawImage[] progressBarImages;
     float heatBarAmmount;
     bool enabledBar = false;
+    [SerializeField] AudioSource audioSource1;
 
     private IEnumerator BlinkBar()
     {
@@ -68,6 +69,7 @@ public class PowerPlantController : MonoBehaviour
     {
         skullImage.gameObject.SetActive(false);
         StartCoroutine(BlinkBar());
+        audioSource1.Play();
     }
 
 
@@ -146,6 +148,7 @@ public class PowerPlantController : MonoBehaviour
             isInDeadZone = true;
             rotateCoroutine = StartCoroutine(RotateArrowToTarget(180));
             isInWarningZone = false;
+            audioSource1.Stop();
             GameController.Instance.KillGenerator();
             GameController.Instance.SwitchAllLights(false); //Also turn all electricity off
             if (audioSource.isPlaying && audioSource.clip == sound1)
@@ -157,6 +160,7 @@ public class PowerPlantController : MonoBehaviour
     }
 
     public void RestartGenerator(){
+            audioSource1.Play();
             power = -30;
             isInDeadZone = false;
             isInWarningZone = false;

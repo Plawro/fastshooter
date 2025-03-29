@@ -150,7 +150,7 @@ public class PlayerInteractions : MonoBehaviour
 
     private void OnTriggerEnter(Collider other){
         if(other == GameController.Instance.walkInsideCollider){
-            GameController.Instance.SwitchModeHallway(true);
+            GameController.Instance.SwitchModeHallway(true, false);
         }
     }
 

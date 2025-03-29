@@ -71,9 +71,10 @@ public class DoorController : MonoBehaviour
     public IEnumerator OpenCloseDoor()
     {
         yield return StartCoroutine(RotateDoorOpen());  // Wait until OpenDoor() finishes
-        doorSoundSource.Play();
+        GameController.Instance.door.PlayOneShot(GameController.Instance.doorSound);
+        print("playing");
         yield return StartCoroutine(RotateDoorClose()); // Then start CloseDoor()
-        yield return null;
+        yield break;
     }
     
     private void OpenDoor(){
