@@ -5216,9 +5216,9 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.89433956, g: 0.89433956, b: 0.89433956, a: 1}
+    m_PressedColor: {r: 0.3660378, g: 0.3660378, b: 0.3660378, a: 1}
+    m_SelectedColor: {r: 0.3886792, g: 0.3886792, b: 0.3886792, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -5789,9 +5789,9 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 0.83396226, g: 0.83396226, b: 0.83396226, a: 1}
+    m_PressedColor: {r: 0.2528302, g: 0.2528302, b: 0.2528302, a: 1}
+    m_SelectedColor: {r: 0.2981131, g: 0.2981131, b: 0.2981131, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -6126,16 +6126,37 @@ MonoBehaviour:
   isPaused: 1
   soundSource: {fileID: 665546788}
   pause: {fileID: 8300000, guid: 47288798d597d23489b2b3a807324162, type: 3}
+  postProcessingVolume: {fileID: 0}
   audioMixer: {fileID: 24100000, guid: bb8f80db6cb460c4b84e6a63450da461, type: 2}
   endText: {fileID: 0}
   skullImage: {fileID: 0}
   canBePaused: 0
   loadingMenu: {fileID: 454331860}
   loadingText: {fileID: 1288178655}
+  followerText: {fileID: 0}
+  followerTitle: {fileID: 0}
+  driftText: {fileID: 0}
+  driftTitle: {fileID: 0}
+  sentinelText: {fileID: 0}
+  sentinelTitle: {fileID: 0}
   playerObject: {fileID: 0}
   options: {fileID: 0}
+  entities: {fileID: 0}
+  warning: {fileID: 0}
+  firstTimePlaying: {fileID: 0}
+  volumeSliders: []
+  graphics: {fileID: 0}
+  fullscreen: {fileID: 0}
+  introTexts: {fileID: 0}
+  introTextsOn: 0
   mainMenuButtons: []
   ambientCont: {fileID: 0}
+  acceptSlider: {fileID: 0}
+  startSlide1: {fileID: 0}
+  startSlide2: {fileID: 0}
+  input: {fileID: 0}
+  welcomeText: {fileID: 0}
+  resetText: {fileID: 0}
 --- !u!114 &830621666
 MonoBehaviour:
   m_ObjectHideFlags: 0

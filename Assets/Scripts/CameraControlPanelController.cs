@@ -16,23 +16,21 @@ public class CameraControlPanelController : MonoBehaviour
 
     private Vector2 targetRotation;
     private Vector2 currentRotation;
-    private float rotationOffset = 0; // Offset for "looking back"
     private float targetOffset = 0;  // Target offset for smooth transition
 
 
-    public Camera mainCamera;
-    public float lookDistance = 5f;
+    [SerializeField] Camera mainCamera;
+    [SerializeField] float lookDistance = 5f;
 
     private bool isUsingVirtualCamera = false;
 
-    public LayerMask ignoreLayer;
-    public TextMeshProUGUI crosshair;
-    //public TextMeshProUGUI inventoryText;
+    [SerializeField] LayerMask ignoreLayer;
+    [SerializeField] TextMeshProUGUI crosshair;
     string crosshairText = " ";
-
     [SerializeField] Transform inventory;
     [SerializeField] Transform leftHand;
     [SerializeField] Transform rightHand;
+    [SerializeField] AudioClip flashSound;
     Coroutine flashCoroutine;
 
     public string nowInteractingWith = "";
@@ -40,6 +38,11 @@ public class CameraControlPanelController : MonoBehaviour
 
     [SerializeField] CinemachineVirtualCamera controlPanelCam;
     [SerializeField] Drift driftController;
+
+    private float holdTimer = 0f;
+    private bool isHoldingLeft = false;
+    private bool isHoldingRight = false;
+    private const float holdTimeRequired = 2f; // 2 seconds to reach 100%
     
 
     void OnEnable(){
@@ -67,13 +70,8 @@ public class CameraControlPanelController : MonoBehaviour
     void Update()
     {
         crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 50);
-        // Check for "look back" key (S)
-        //if (Input.GetKeyDown(KeyCode.S))
-        //{
-            //targetOffset = targetOffset == 0 ? 180 : 0; // Toggle between 0 and 180 degrees
-        //}
 
-        // Get cursor position as a percentage of the screen
+        // Get cursor position as a percentage of the screen (instead of adding position)
         Vector2 cursorPosition = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
 
         // Invert cursor mapping to make movement intuitive
@@ -89,8 +87,6 @@ public class CameraControlPanelController : MonoBehaviour
 
         // Apply rotation to the camera
         virtualCamera.transform.localRotation = Quaternion.Euler(currentRotation.y, currentRotation.x, 0);
-
-        // KEYBOARD MODE
         
         if(targetOffset == -90 ||targetOffset == 0 || targetOffset == -180){
         if(nowInteractingWith == ""){
@@ -136,8 +132,7 @@ public class CameraControlPanelController : MonoBehaviour
                 targetOffset = -90;
             }
         }
-
-        // MOUSE MODE
+        
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
@@ -162,8 +157,7 @@ public class CameraControlPanelController : MonoBehaviour
                         }
                     }
                 } else {
-                    // Default text
-                    crosshairText = "Hold Left/Right Click to Insert " +
+                    crosshairText = "Hold " + (hasLeftCapsule ? "Left" : "") + (hasRightCapsule && hasLeftCapsule ? " or " : "") + (hasRightCapsule ? "Right" : "") + " click to insert " +
                         (hasLeftCapsule ? leftHand.GetChild(0).name : "") +
                         (hasRightCapsule && hasLeftCapsule ? " or " : "") +
                         (hasRightCapsule ? rightHand.GetChild(0).name : "");
@@ -194,13 +188,13 @@ public class CameraControlPanelController : MonoBehaviour
         }
     }
 
-    private float holdTimer = 0f;
-    private bool isHoldingLeft = false;
-    private bool isHoldingRight = false;
-    private const float holdTimeRequired = 2f; // 2 seconds to reach 100%
-
     void InsertCapsule(Transform hand, GameObject hit) {
         Transform capsule = hand.GetChild(0); // Get the capsule
+        capsule.gameObject.layer = 0;
+        foreach (Transform child in capsule)
+        {
+            child.gameObject.layer = 0;
+        }
         capsule.parent = hit.transform; // Set the new parent
         // Ensure the capsule is properly positioned
         capsule.localPosition = Vector3.zero;
@@ -219,6 +213,7 @@ public class CameraControlPanelController : MonoBehaviour
     }
 
     IEnumerator Flash(int rotation){
+        GameController.Instance.PlaySound(flashSound);
         yield return new WaitForSeconds(0.2f);
         flashLight.SetActive(true);
         driftController.Flash(rotation);
@@ -253,15 +248,14 @@ public class CameraControlPanelController : MonoBehaviour
 
     void PickupObject(Transform obj, Transform hand)
     {
+        obj.gameObject.layer = 17;
+        foreach (Transform child in obj.transform)
+        {
+            child.gameObject.layer = 17;
+        }
         obj.position = hand.position;
         obj.parent = hand;
         obj.localRotation = Quaternion.Euler(0, 180, 0);
-        /*inventoryText.text = 
-        "Inventory:\n"+
-        (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "Empty") + 
-        " | " + 
-        (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "Empty");
-        */
     }
 
 
@@ -274,12 +268,10 @@ public class CameraControlPanelController : MonoBehaviour
         GameController.Instance.activeVirtualCamera = virtualCamera;
         GameController.Instance.activeVirtualCamera.gameObject.SetActive(true);
         isUsingVirtualCamera = false;
-       // mainCamera.transform.position = camPosSave;
     }
 
     public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
-        //camPosSave = mainCamera.transform.position;
         if (GameController.Instance.activeVirtualCamera != null)
         {
             GameController.Instance.activeVirtualCamera.gameObject.SetActive(false);

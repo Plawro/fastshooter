@@ -5,8 +5,8 @@ using TMPro;
 
 public class ControlPanelController : MonoBehaviour
 {
-    public Transform[] capsuleHolder;
-    public Transform[] capsuleIcons;
+    [SerializeField] Transform[] capsuleHolder;
+    [SerializeField] Transform[] capsuleIcons;
     int e = 0;
     int i = 0;
     int correct = 0;
@@ -52,9 +52,4 @@ public class ControlPanelController : MonoBehaviour
             taskText.color = Color.green;
         }
     }
-
-
-    //CancelInvoke(nameof(CapsuleChanged));
-
-
 }

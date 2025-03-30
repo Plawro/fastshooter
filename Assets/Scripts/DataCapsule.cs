@@ -7,25 +7,14 @@ using TMPro;
 public class DataCapsule : MonoBehaviour
 {
     public int mode = 0; // 0 - off, 1 - blinking orange, 2 - green, 3 - red
-    public GameObject indicator;
-    public TextMeshProUGUI numberText;
+    [SerializeField] GameObject indicator;
+    [SerializeField] TextMeshProUGUI numberText;
     public int number;
     Coroutine alreadyBlinking;
     
     void Start(){
         numberText.text = number.ToString();
     }
-
-    /*void Update(){
-        if(Input.GetKeyDown(KeyCode.Q)){
-            if(mode == 2){
-                mode = 0;
-            }else{
-                mode++;
-            }
-            ChangeMode(mode);
-        }
-    }*/
 
     public void ChangeMode(int whatMode){
         mode = whatMode;

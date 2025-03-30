@@ -8,23 +8,23 @@ using UnityEditor;
 
 public class PlayerInteractions : MonoBehaviour
 {
-    public PlayerController playerController;
-    public PowerPlantController powerPlantController;
-    public StatsScreen statsScreen;
-    public Camera mainCamera;
-    public float lookDistance = 10f;
+    [SerializeField] PlayerController playerController;
+    [SerializeField] PowerPlantController powerPlantController;
+    [SerializeField] StatsScreen statsScreen;
+    [SerializeField] Camera mainCamera;
+    [SerializeField] float lookDistance = 10f;
 
     private bool isUsingVirtualCamera = false;
 
-    public LayerMask ignoreLayer;
-    public TextMeshProUGUI crosshair;
+    [SerializeField] LayerMask ignoreLayer;
+    [SerializeField] TextMeshProUGUI crosshair;
     string crosshairText = "[E] Interact";
-    public string crosshairSymbol = "+";
+    [SerializeField] string crosshairSymbol = "+";
 
-    public Transform leftHand;
-    public Transform rightHand;
+    [SerializeField] Transform leftHand;
+    [SerializeField] Transform rightHand;
 
-    public string nowInteractingWith = "";
+    [SerializeField] string nowInteractingWith = "";
 
     void Start(){
         crosshair.gameObject.SetActive(true);
@@ -48,7 +48,6 @@ public class PlayerInteractions : MonoBehaviour
                 
                 string crosshairText = "Use";
                 crosshair.text = crosshairText;
-                //crosshair.color = Color.blue; 
 
                 if(Input.GetKeyDown(KeyCode.E)){
                     if (isUsingVirtualCamera)
@@ -106,7 +105,7 @@ public class PlayerInteractions : MonoBehaviour
                     hit.transform.position = leftHand.position;
                     hit.transform.parent = leftHand;
                     leftHand.transform.GetChild(0).localRotation = new Quaternion(0,180,0,0);
-                    if(leftHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ //Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
+                    if(leftHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ // Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
                         leftHand.GetChild(0).transform.GetComponent<DataCapsule>().ChangeMode(3);
                     }
 
@@ -119,7 +118,7 @@ public class PlayerInteractions : MonoBehaviour
                     hit.transform.position = rightHand.position;
                     hit.transform.parent = rightHand;
                     rightHand.transform.GetChild(0).localRotation = new Quaternion(0,180,0,0);
-                    if(rightHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ //Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
+                    if(rightHand.GetChild(0).transform.GetComponent<DataCapsule>().mode == 1){ // Capsule is in mode 1 only when uploading/downloading,.. whenever we touch it when in mode 1, it goes red
                         rightHand.GetChild(0).transform.GetComponent<DataCapsule>().ChangeMode(3);
                     }
                     
@@ -131,7 +130,6 @@ public class PlayerInteractions : MonoBehaviour
         }
         else
         {
-            //crosshair.color = Color.white;
             crosshairText = crosshairSymbol;
             if (crosshair.text != crosshairText) 
             crosshair.text = crosshairText;
@@ -139,7 +137,6 @@ public class PlayerInteractions : MonoBehaviour
     }
     else
     {
-        //crosshair.color = Color.white;
         crosshairText = crosshairSymbol;
         if (crosshair.text != crosshairText) 
         crosshair.text = crosshairText;
@@ -157,7 +154,6 @@ public class PlayerInteractions : MonoBehaviour
 
     public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
-        //camPosSave = mainCamera.transform.position;
         if (GameController.Instance.activeVirtualCamera != null)
         {
             GameController.Instance.activeVirtualCamera.gameObject.SetActive(false);
@@ -196,14 +192,10 @@ public class PlayerInteractions : MonoBehaviour
         }
         GameController.Instance.activeVirtualCamera = null;
         isUsingVirtualCamera = false;
-       // mainCamera.transform.position = camPosSave;
-
-        
-            playerController.canMove = true;
-             Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            crosshair.enabled = true;
-        
+        playerController.canMove = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        crosshair.enabled = true;
         powerPlantController = null;
     }
 }

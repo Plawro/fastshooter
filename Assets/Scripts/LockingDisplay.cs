@@ -7,33 +7,37 @@ using UnityEngine.ProBuilder.MeshOperations;
 
 public class LockingDisplay : MonoBehaviour
 {
-    public GameObject playerObject;
-     public RectTransform currentFrequency;
+    [SerializeField] GameObject playerObject;
+    [SerializeField] RectTransform currentFrequency;
     public RectTransform targetFrequency;
-    public RectTransform squareScreenArea;
+    [SerializeField] RectTransform squareScreenArea;
     public TextMeshProUGUI statusText;
-    public TextMeshProUGUI coordsText;
-    public StatsScreen rectangularScreenController;
+    [SerializeField] TextMeshProUGUI coordsText;
+    [SerializeField] StatsScreen rectangularScreenController;
     
     [SerializeField] private AudioClip bootSound;
 
 
-    public Transform gameUI;
-    public Transform preGameUI;
-    public Transform activateText;
-    public Transform minigameUI;
-    public Transform activateTextTC;
+    [SerializeField] Transform gameUI;
+    [SerializeField] Transform preGameUI;
+    [SerializeField] Transform activateText;
+    [SerializeField] Transform minigameUI;
+    [SerializeField] Transform activateTextTC;
 
-    public bool isLocked = false;
+    [SerializeField] bool isLocked = false;
     public bool isSearching = true;
     private Coroutine lockingCoroutine = null;
     private Coroutine searchBlinkCoroutine = null;
-     public AudioSource audioSource;
+    [SerializeField] AudioSource audioSource;
     private Coroutine blinkCoroutine;
     private bool isBlinking = true;
-    public TowerController towerController;
+    [SerializeField] TowerController towerController;
     private Coroutine checkAntennaRoutine;
-    public TMPro.TMP_FontAsset easvhsFont;
+    [SerializeField] TMPro.TMP_FontAsset easvhsFont;
+    bool soundPlayed;
+    float soundTimer = 0;
+
+    public Coroutine newTarget;
 
     private void Start()
     {
@@ -79,7 +83,7 @@ public class LockingDisplay : MonoBehaviour
 
     private void HandleInput()
     {
-        float moveSpeed = 100f * Time.deltaTime;
+        float moveSpeed = 120f * Time.deltaTime;
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
@@ -126,8 +130,6 @@ public class LockingDisplay : MonoBehaviour
         currentFrequency.anchoredPosition = clampedPosition;
     }
 
-    bool soundPlayed;
-    float soundTimer = 0;
     void LateUpdate()
     {
         if(soundPlayed){
@@ -172,8 +174,8 @@ public class LockingDisplay : MonoBehaviour
         isSearching = false;
         statusText.text = "LOCKED";
         StopSearchingAnimation(); // Stop the blinking animation
-        // Random chance to break antenna (will be replaced soon)
-        if (Random.Range(1,5) == 2)
+        // Random chance to break antenna
+        if (Random.Range(1,10) == 2)
         {
             print("2");
             rectangularScreenController.BreakAntenna();
@@ -216,11 +218,8 @@ public class LockingDisplay : MonoBehaviour
             yield return new WaitForSeconds(2f);
         }
         // Once the antenna is not broken, start the other coroutine
-        yield return SpawnNewTargetFrequency();
+        yield return newTarget = StartCoroutine(SpawnNewTargetFrequency());
     }
-
-
-    
 
     public void StopSearchingAnimation()
     {
@@ -247,9 +246,9 @@ public class LockingDisplay : MonoBehaviour
         {
             StartCoroutine(SpawnFakeFrequency());
         }
-        yield return new WaitForSeconds(Random.Range(1f, 10f)); // Random delay between 1 and 10 seconds
+        yield return new WaitForSeconds(Random.Range(1f, 6f)); // Random delay between 1 and 6 seconds
 
-        if (isSearching)
+        if (isSearching && newTarget != null)
         {
             // Ensure it spawns within the screen bounds
             float halfSquareWidth = 125f / 2;
@@ -263,60 +262,61 @@ public class LockingDisplay : MonoBehaviour
             targetFrequency.anchoredPosition = randomPosition;
             targetFrequency.gameObject.SetActive(true); // Show target frequency
         }
+        newTarget = null;
+        yield break;
     }
 
 
     IEnumerator SpawnFakeFrequency()
-{
-    yield return new WaitForSeconds(Random.Range(2,6));
-    // Create a new empty GameObject for the fake frequency
-    GameObject fakeFreq = new GameObject("FakeFreq_" + Random.Range(1000, 9999), typeof(RectTransform), typeof(Image));
-    fakeFreq.transform.SetParent(targetFrequency.parent, false); // Parent it to the same UI canvas
-
-    RectTransform fakeRect = fakeFreq.GetComponent<RectTransform>();
-    fakeRect.sizeDelta = targetFrequency.sizeDelta; // Match the size of the original
-
-    // Set random position within screen bounds
-    float halfWidth = 125f / 2;
-    float halfHeight = 125f / 2;
-    fakeRect.anchoredPosition = new Vector2(
-        Random.Range(-squareScreenArea.rect.width / 2 + halfWidth, squareScreenArea.rect.width / 2 - halfWidth),
-        Random.Range(-squareScreenArea.rect.height / 2 + halfHeight, squareScreenArea.rect.height / 2 - halfHeight)
-    );
-
-    // Set the Image component to gray
-    Image img = fakeFreq.GetComponent<Image>();
-    img.sprite = targetFrequency.GetComponent<Image>().sprite; // Use the same sprite
-    img.color = Color.gray; // Change color to gray
-
-    // === Add TextMeshPro Component ===
-    GameObject textObj = new GameObject("FakeFreq_Text", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
-    textObj.transform.SetParent(fakeFreq.transform, false);
-
-    RectTransform textRect = textObj.GetComponent<RectTransform>();
-    textRect.sizeDelta = new Vector2(70f, 20f); // Set a reasonable size for the text
-    textRect.anchorMin = new Vector2(0f, 0f); // Bottom-left corner
-    textRect.anchorMax = new Vector2(0f, 0f);
-    textRect.pivot = new Vector2(0f, 0f);
-    textRect.anchoredPosition = new Vector2(5f, 5f); // Offset from bottom-left corner
-
-    TMPro.TextMeshProUGUI textComponent = textObj.GetComponent<TMPro.TextMeshProUGUI>();
-    textComponent.text = "UNKNOWN";
-    textComponent.fontSize = 10f;
-    textComponent.alignment = TMPro.TextAlignmentOptions.BottomLeft;
-     if (easvhsFont != null)
     {
-        textComponent.font = easvhsFont;
-    }
-    else
-    {
-        Debug.LogWarning("Font not assigned in Inspector! Assign easvhsFont manually.");
-    }
+        yield return new WaitForSeconds(Random.Range(2,6));
+        // Create a new empty GameObject for the fake frequency
+        GameObject fakeFreq = new GameObject("FakeFreq_" + Random.Range(1000, 9999), typeof(RectTransform), typeof(Image));
+        fakeFreq.transform.SetParent(targetFrequency.parent, false); // Parent it to the same UI canvas
 
-    // Ensure it's visible
-    fakeFreq.SetActive(true);
-    yield return null;
-}
+        RectTransform fakeRect = fakeFreq.GetComponent<RectTransform>();
+        fakeRect.sizeDelta = targetFrequency.sizeDelta; // Match the size of the original
+
+        // Set random position within screen bounds
+        float halfWidth = 125f / 2;
+        float halfHeight = 125f / 2;
+        fakeRect.anchoredPosition = new Vector2(
+            Random.Range(-squareScreenArea.rect.width / 2 + halfWidth, squareScreenArea.rect.width / 2 - halfWidth),
+            Random.Range(-squareScreenArea.rect.height / 2 + halfHeight, squareScreenArea.rect.height / 2 - halfHeight)
+        );
+
+        // Set the Image component to gray
+        Image img = fakeFreq.GetComponent<Image>();
+        img.sprite = targetFrequency.GetComponent<Image>().sprite; // Use the same sprite
+        img.color = Color.gray; // Change color to gray
+
+        GameObject textObj = new GameObject("FakeFreq_Text", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+        textObj.transform.SetParent(fakeFreq.transform, false);
+
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.sizeDelta = new Vector2(70f, 20f); // Set a reasonable size for the text
+        textRect.anchorMin = new Vector2(0f, 0f); // Bottom-left corner
+        textRect.anchorMax = new Vector2(0f, 0f);
+        textRect.pivot = new Vector2(0f, 0f);
+        textRect.anchoredPosition = new Vector2(5f, 5f); // Offset from bottom-left corner
+
+        TMPro.TextMeshProUGUI textComponent = textObj.GetComponent<TMPro.TextMeshProUGUI>();
+        textComponent.text = "UNKNOWN";
+        textComponent.fontSize = 10f;
+        textComponent.alignment = TMPro.TextAlignmentOptions.BottomLeft;
+        if (easvhsFont != null)
+        {
+            textComponent.font = easvhsFont;
+        }
+        else
+        {
+            Debug.LogWarning("Font not assigned in Inspector! Assign easvhsFont manually.");
+        }
+
+        // Ensure it's visible
+        fakeFreq.SetActive(true);
+        yield return null;
+    }
 
 
     private IEnumerator BlinkText()

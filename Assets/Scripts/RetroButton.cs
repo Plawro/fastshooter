@@ -5,17 +5,17 @@ using TMPro;
 
 public class RetroButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    public Image whiteLine;
-    public Image buttonBackground;
-    public TextMeshProUGUI buttonText;
+    [SerializeField] Image whiteLine;
+    [SerializeField] Image buttonBackground;
+    [SerializeField] TextMeshProUGUI buttonText;
      
-    public Color hoverTextColor = Color.white;
-    public Color clickTextColor = Color.black;
-    public Color originalTextColor;
+    [SerializeField] Color hoverTextColor = Color.white;
+    [SerializeField] Color clickTextColor = Color.black;
+    [SerializeField] Color originalTextColor;
 
-    public AudioSource soundSource;
-    public AudioClip hover;
-    public AudioClip click;
+    [SerializeField] AudioSource soundSource;
+    [SerializeField] AudioClip hover;
+    [SerializeField] AudioClip click;
 
 
     private void Start()

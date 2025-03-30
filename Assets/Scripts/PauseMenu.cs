@@ -10,22 +10,22 @@ using UnityEngine.Rendering;
 
 public class PauseMenu : MonoBehaviour
 {
-    public GameObject pauseMenu;
+    [SerializeField] GameObject pauseMenu;
     public bool isPaused = false;
-    public AudioSource soundSource;
-    public AudioClip pause;
+    [SerializeField] AudioSource soundSource;
+    [SerializeField] AudioClip pause;
     int mainMenuSelected;
     int entitySelected;
     [SerializeField] Volume postProcessingVolume;
 
     [SerializeField] AudioMixer audioMixer;
 
-    public static string endMessage = "End message";
-    public TextMeshProUGUI endText;
-    public GameObject skullImage;
-    public bool canBePaused;
-    public GameObject loadingMenu;
-    public TextMeshProUGUI loadingText;
+    [SerializeField] static string endMessage = "You died.";
+    [SerializeField] TextMeshProUGUI endText;
+    [SerializeField] GameObject skullImage;
+    [SerializeField] bool canBePaused;
+    [SerializeField] GameObject loadingMenu;
+    [SerializeField] TextMeshProUGUI loadingText;
     Coroutine blinkImage;
     bool alreadyBlinking;
     [SerializeField] GameObject followerText;
@@ -45,6 +45,8 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] Toggle fullscreen;
     [SerializeField] GameObject introTexts;
     public bool introTextsOn;
+    [SerializeField] TextMeshProUGUI[] mainMenuButtons;
+    [SerializeField] AmbientController ambientCont;
     void Start()
     {
         if(PlayerPrefs.HasKey("Graphics")){
@@ -289,7 +291,7 @@ public class PauseMenu : MonoBehaviour
     public void MainMenuChangeColor(int selected){
         switch(selected){
             case 1:
-                mainMenuButtons[0].color = Color.white; // For coule be used, but its unnecessary if we know there are always 3 buttons and only 2 of them set to basic color
+                mainMenuButtons[0].color = Color.white; // For could be used, but its unnecessary if we know there are always 3 buttons and only 2 of them set to basic color
                 mainMenuButtons[1].color = Color.gray;
                 mainMenuButtons[2].color = Color.gray;
                 mainMenuButtons[3].color = Color.gray;
@@ -360,7 +362,7 @@ public class PauseMenu : MonoBehaviour
                 break;
         }
     }
-    [SerializeField] TextMeshProUGUI[] mainMenuButtons;
+    
     public void ChangePauseMode(){
         if(canBePaused){
             soundSource.PlayOneShot(pause);
@@ -395,23 +397,13 @@ public class PauseMenu : MonoBehaviour
                 loadingText.text = "Press any key to continue";
             }
             yield return null;
-
-
-
-            /*
-            float progress = Mathf.Clamp01(operation.progress * 100);
-
-            loadingText.text = progress.ToString() + " %";
-
-            yield return null;*/
         }
     }
     
     public void TheEnd(string endMessageGot){
         endMessage = endMessageGot;
         endText.text = endMessage;
-        //Settings.Instance.deathMessage = endMessage;
-        SceneManager.LoadScene (sceneName:"TheEnd"); //FIX
+        SceneManager.LoadScene (sceneName:"TheEnd");
     }
 
     public void Victory(){
@@ -426,7 +418,6 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
-    [SerializeField] AmbientController ambientCont;
     void PauseGame(){
         if(canBePaused){
             StartCoroutine(ambientCont.FadeOutBoth());

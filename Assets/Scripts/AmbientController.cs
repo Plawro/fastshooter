@@ -10,14 +10,14 @@ using UnityEngine.UI;
 
 public class AmbientController : MonoBehaviour
 {
-    public AudioSource inAmbience;
-    public AudioSource outAmbience;
-    public AudioSource outWindAmbience;
-    public AudioSource sirenSource;
-    public float fadeDuration = 2.0f; // Transition in seconds
+    [SerializeField] AudioSource inAmbience;
+    [SerializeField] AudioSource outAmbience;
+    [SerializeField] AudioSource outWindAmbience;
+    [SerializeField] AudioSource sirenSource;
+    [SerializeField] float fadeDuration = 2.0f; // Transition in seconds
 
-    public bool isIndoors = false;
-    public bool isOtherPlaying = false; // Stop ambient when chasing, ... music is playing
+    [SerializeField] public bool isIndoors = false;
+    [SerializeField] bool isOtherPlaying = false; // Stop ambient when chasing, ... music is playing
     private Coroutine currentFadeRoutine;
     private bool previousIsOtherPlaying = false;
     public Material skyboxMaterial;
@@ -25,15 +25,31 @@ public class AmbientController : MonoBehaviour
     public bool stormStarted = false;
 
     [SerializeField] GameObject exitSign;
+    float timerVan;
+    bool countVanTimer;
     float scarySoundTimer = 0;
+    [Header("Danger text")]
+    [SerializeField] TextMeshProUGUI dangerText;
+    Coroutine dangerTextBlinking;
+    [Header("Scary sounds")]
+    [SerializeField] AudioSource scarySoundSource;
+    [SerializeField] AudioClip[] scarySounds;
+    [Header("Update")]
+    [SerializeField] Volume volume;
+    [SerializeField] GameObject centerObject;
+    float normalizedDistance;
+    float playerStormHP = 0;
+    float distance;
 
     void Start()
     {
         scarySoundTimer = Random.Range(40, 100);
-        inAmbience.volume = 1;  // Ensure indoor starts muted when outside
-        outAmbience.volume = 0;
+        inAmbience.volume = 0;
+        outAmbience.volume = 1;
+        outWindAmbience.volume = 1;
         inAmbience.Play();
         outAmbience.Play();
+        outWindAmbience.Play();
         timeTillStorm = Random.Range(40, 210);
         dangerText.enabled = false;
         if(SceneManager.GetActiveScene().name == "TheEnd" || SceneManager.GetActiveScene().name == "Victory"){
@@ -42,8 +58,7 @@ public class AmbientController : MonoBehaviour
             dangerText.alpha = 255;
         }
     }
-    float timerVan;
-    bool countVanTimer;
+    
     public IEnumerator VanIsHere(){
         countVanTimer = true;
         Debug.Log("GG2");
@@ -67,8 +82,6 @@ public class AmbientController : MonoBehaviour
         GameController.Instance.RemoveTutorial(); // He left
         yield break;
     }
-
-    private int indoorsCollidersTouched = 0;  // Track how many indoor colliders are touched
 
     public void SetOutside()
     {
@@ -107,7 +120,6 @@ public class AmbientController : MonoBehaviour
     }
 
     IEnumerator StormLife(){
-        print("STORM");
         yield return new WaitForSeconds(25);
         StopStorm();
         yield return null;
@@ -119,9 +131,6 @@ public class AmbientController : MonoBehaviour
         sirenSource.Play();
         StartCoroutine(BlinkSiren());
         stormLife = StartCoroutine(StormLife());
-        //Start sirens, glowing red on tower
-        //Darken fog
-        //Player must
     }
     Color color;
     public void StopStorm(){
@@ -139,88 +148,45 @@ public class AmbientController : MonoBehaviour
             currentFadeRoutine = StartCoroutine(FadeToIndoor());
     }
 
-/*
-private void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("Player") && !isOtherPlaying)
-    {
-        indoorsCollidersTouched++;
-        if (indoorsCollidersTouched == 1) // Only fade when entering the first indoor collider
-        {
-            isIndoors = true;
-            if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
-            currentFadeRoutine = StartCoroutine(FadeToIndoor());
-        }
-    }
-
-}
-
-private void OnTriggerExit(Collider other)
-{
-    if (other.CompareTag("Player") && !isOtherPlaying)
-    {
-        indoorsCollidersTouched--;
-        if (indoorsCollidersTouched == 0) // Only fade when leaving the last indoor collider
-        {
-            isIndoors = false;
-            if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
-            currentFadeRoutine = StartCoroutine(FadeToOutdoor());
-        }
-    }
-
-}
-*/
-    [Header("Danger text")]
-    [SerializeField] TextMeshProUGUI dangerText;
-    Coroutine dangerTextBlinking;
-    bool useText1 = true;
+    
     IEnumerator DangerTextBlinking(){
         CinemachineVirtualCamera mainCamera = GameController.Instance.playerCamera;
-    float originalFOV = mainCamera.m_Lens.FieldOfView;
+        float originalFOV = mainCamera.m_Lens.FieldOfView;
 
-    while (dangerText.enabled)
-    {
-            mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
-            dangerText.alpha = 0;
-            yield return new WaitForSeconds(0.1f);
+        while (dangerText.enabled)
+        {
+                mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
+                dangerText.alpha = 0;
+                yield return new WaitForSeconds(0.1f);
 
-            dangerText.alpha = 255;
-            mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
-            if (stormLife != null && normalizedDistance >= 0.75f)
-            {
-                // Alternate between both messages
-                dangerText.text = "I AM DEAD";
-            }
-            else if (stormLife != null)
-            {
-                dangerText.text = "I SHOULD GET BACK INSIDE QUICKLY";
-            }
-            else if (normalizedDistance >= 0.75f)
-            {
-                dangerText.text = "I SHOULD RETURN BACK TO SAFETY";
-            }else if(timerVan <= 30){
-                dangerText.text = "Time is up. Get to the van fast.";
-            }
+                dangerText.alpha = 255;
+                mainCamera.m_Lens.FieldOfView = originalFOV + Random.Range(-2f, 2f);
+                if (stormLife != null && normalizedDistance >= 0.75f)
+                {
+                    dangerText.text = "I AM DEAD";
+                }
+                else if (stormLife != null)
+                {
+                    dangerText.text = "I SHOULD GET BACK INSIDE QUICKLY";
+                }
+                else if (normalizedDistance >= 0.75f)
+                {
+                    dangerText.text = "I SHOULD RETURN BACK TO SAFETY";
+                }else if(timerVan <= 30){
+                    dangerText.text = "Time is up. Get to the van fast.";
+                }
 
-            yield return new WaitForSeconds(0.1f);
-        
+                yield return new WaitForSeconds(0.1f);
+            
+        }
     }
-    }
-    [Header("Scary sounds")]
-    [SerializeField] AudioSource scarySoundSource;
-    [SerializeField] AudioClip[] scarySounds;
+    
     void PlayScarySound(){
         if (!scarySoundSource.isPlaying){
             scarySoundSource.PlayOneShot(scarySounds[Random.Range(0, scarySounds.Length)]);
         }
     }
 
-    [Header("Update")]
-    [SerializeField] Volume volume;
-    [SerializeField] GameObject centerObject;
-    float normalizedDistance;
-    float playerStormHP = 0;
-    float distance;
     public void Update()
     {   
         if(countVanTimer){
@@ -255,12 +221,11 @@ private void OnTriggerExit(Collider other)
                 float transitionProgress = Mathf.InverseLerp(0.07f, 0.055f, RenderSettings.fogDensity);
                 RenderSettings.fogColor = Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), Color.black, transitionProgress);
 
-                skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), new Color(20 / 255f, 20 / 255f, 20 / 255f), transitionProgress));
+                //skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(95 / 255f, 95 / 255f, 95 / 255f), new Color(20 / 255f, 20 / 255f, 20 / 255f), transitionProgress));
             }
             if(!countVanTimer){
             dangerText.enabled = false;
             }
-            //Remove darkening screen
         }
         else
         {
@@ -298,7 +263,6 @@ private void OnTriggerExit(Collider other)
                 if(dangerTextBlinking == null){ // Or remove this for random blinking effect
                     dangerTextBlinking = StartCoroutine(DangerTextBlinking());
                 }
-                //Coroutine blinking text start, start darkening the screen until player dies
             }else{
                 if (normalizedDistance <= 0.75f && !countVanTimer){
                     dangerText.enabled = false;
@@ -315,97 +279,70 @@ private void OnTriggerExit(Collider other)
                 float transitionProgress = Mathf.InverseLerp(0.055f, 0.07f, RenderSettings.fogDensity);
                 RenderSettings.fogColor = Color.Lerp(Color.black, new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress);
 
-                skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(20 / 255f, 20 / 255f, 20 / 255f), new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress));
+                //skyboxMaterial.SetColor("_Tint", Color.Lerp(new Color(20 / 255f, 20 / 255f, 20 / 255f), new Color(95 / 255f, 95 / 255f, 95 / 255f), transitionProgress));
             }
         }
-    IEnumerator KilledByStorm(int i){
-        if(i==1){
-            GameController.Instance.Jumpscare("Storm");
+
+        IEnumerator KilledByStorm(int i){
+            if(i==1){
+                GameController.Instance.Jumpscare("Storm");
+            }else{
+                GameController.Instance.Jumpscare("Distance");
+            }
+            yield break;
+        }
+    }
+
+        private IEnumerator FadeToIndoor()
+    {
+        float timer = 0f;
+        isInsidePlaying = true;
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            outAmbience.volume = Mathf.Lerp(1, 0, timer / fadeDuration); // Fade outdoor sound out
+            outWindAmbience.volume = Mathf.Lerp(0.2f, 0, timer / fadeDuration); // Fade outdoor sound out
+            inAmbience.volume = Mathf.Lerp(0, 1, timer / fadeDuration); // Fade indoor sound in
+            yield return null;
+        }
+    }
+    bool isInsidePlaying = false;
+
+    private IEnumerator FadeToOutdoor()
+    {
+        float timer = 0f;
+        isInsidePlaying = false;
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            inAmbience.volume = Mathf.Lerp(1, 0, timer / fadeDuration); // Fade indoor sound out
+            outAmbience.volume = Mathf.Lerp(0, 1, timer / fadeDuration); // Fade outdoor sound in
+            outWindAmbience.volume = Mathf.Lerp(0, 0.2f, timer / fadeDuration); // Fade outdoor sound in
+            yield return null;
+        }
+    }
+
+    public IEnumerator FadeOutBoth()
+    {
+        float timer = 0f;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            inAmbience.volume = Mathf.Lerp(inAmbience.volume, 0, timer / fadeDuration); // Fade indoor to silence
+            outAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
+            outWindAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
+            yield return null;
+        }
+    }
+
+    public IEnumerator FadeBackIn()
+    {
+        if(isInsidePlaying){
+            StartCoroutine(FadeToIndoor());
         }else{
-            GameController.Instance.Jumpscare("Distance");
+            StartCoroutine(FadeToOutdoor());
         }
         yield break;
     }
-        
-/*
-    if (isOtherPlaying != previousIsOtherPlaying)
-    {
-        previousIsOtherPlaying = isOtherPlaying;
-
-        if (isOtherPlaying)
-        {
-            if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
-            currentFadeRoutine = StartCoroutine(FadeOutBoth());
-        }
-        else
-        {
-            if (isIndoors)
-            {
-                print("indoor");
-                if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
-                currentFadeRoutine = StartCoroutine(FadeToIndoor());
-            }
-            else
-            {
-                print("outdoor");
-                if (currentFadeRoutine != null) StopCoroutine(currentFadeRoutine);
-                currentFadeRoutine = StartCoroutine(FadeToOutdoor());
-            }
-        }
-    }*/
-}
-
-    private IEnumerator FadeToIndoor()
-{
-    float timer = 0f;
-    isInsidePlaying = true;
-    while (timer < fadeDuration)
-    {
-        timer += Time.deltaTime;
-        outAmbience.volume = Mathf.Lerp(1, 0, timer / fadeDuration); // Fade outdoor sound out
-        outWindAmbience.volume = Mathf.Lerp(0.2f, 0, timer / fadeDuration); // Fade outdoor sound out
-        inAmbience.volume = Mathf.Lerp(0, 1, timer / fadeDuration); // Fade indoor sound in
-        yield return null;
-    }
-}
-bool isInsidePlaying = false;
-
-private IEnumerator FadeToOutdoor()
-{
-    float timer = 0f;
-    isInsidePlaying = false;
-    while (timer < fadeDuration)
-    {
-        timer += Time.deltaTime;
-        inAmbience.volume = Mathf.Lerp(1, 0, timer / fadeDuration); // Fade indoor sound out
-        outAmbience.volume = Mathf.Lerp(0, 1, timer / fadeDuration); // Fade outdoor sound in
-        outWindAmbience.volume = Mathf.Lerp(0, 0.2f, timer / fadeDuration); // Fade outdoor sound in
-        yield return null;
-    }
-}
-
-public IEnumerator FadeOutBoth()
-{
-    float timer = 0f;
-
-    while (timer < fadeDuration)
-    {
-        timer += Time.deltaTime;
-        inAmbience.volume = Mathf.Lerp(inAmbience.volume, 0, timer / fadeDuration); // Fade indoor to silence
-        outAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
-        outWindAmbience.volume = Mathf.Lerp(outAmbience.volume, 0, timer / fadeDuration); // Fade outdoor to silence
-        yield return null;
-    }
-}
-
-public IEnumerator FadeBackIn() // Could receive fixes, but works
-{
-    if(isInsidePlaying){
-        StartCoroutine(FadeToIndoor());
-    }else{
-        StartCoroutine(FadeToOutdoor());
-    }
-    yield break;
-}
-
 }

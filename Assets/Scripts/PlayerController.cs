@@ -18,11 +18,11 @@ public class PlayerController : MonoBehaviour
 {
     //##1 Components and variables
     [Header("Components")]
-    public GameObject playerCamera;
-    public Rigidbody rb;
+    [SerializeField] GameObject playerCamera;
+    [SerializeField] Rigidbody rb;
     private CharacterController characterController;
-    public AudioSource footstepAudioSource;
-    public AudioClip footstepSound;
+    [SerializeField] AudioSource footstepAudioSource;
+    [SerializeField] AudioClip footstepSound;
 
 
     [Header("User settings")]
@@ -34,7 +34,7 @@ public class PlayerController : MonoBehaviour
     float acceleration = 80f;
     float deceleration = 80f;
     float jumpPower = 6f;
-    public float gravity = 30f;
+    [SerializeField] float gravity = 30f;
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 initialCameraPosition;
 
@@ -52,7 +52,6 @@ public class PlayerController : MonoBehaviour
     private float curSpeedX;
     private float curSpeedY;
     public bool canMove = true;
-    Vector3 restPosition;
     float bobSpeed = 10f;
     float defaultCameraY;
     Vector3 newPosition = new Vector3(0,1f,0);
@@ -66,7 +65,7 @@ public class PlayerController : MonoBehaviour
     float movementDirectionY;
 
     // SETTINGS
-    public float lookSpeed = 2f;
+    [SerializeField] float lookSpeed = 2f;
     float bobAmount = 0.1f;
 
     void Start() // Prepares character for the game
@@ -165,36 +164,8 @@ public class PlayerController : MonoBehaviour
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rotationZ);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
-            
-        
-        /*
-        if(Input.GetKey(KeyCode.U) && RenderSettings.fogDensity >= 0.01){
-            RenderSettings.fogDensity -= Time.deltaTime /20;
-        }
-        */
-        
-
-
 
         // ##4 Bobbing and camera tilting (that's all)
-
-
-
-        // IGNORE
-        /* ROTATION BY SPEED
-            rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
-            rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
-            playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, rb.velocity.magnitude);
-*/
-/* ROTATION BY PRESSED A / D
-float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle;
-        float smoothedZRotation = Mathf.Lerp(playerCamera.transform.localRotation.eulerAngles.z, targetZRotation, tiltSmoothing);
-        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTiltAngle);
-*/
-
-
-
-
         // Camera movement by jump / mid air velocity
         float smoothSpeed = 8.0f;
         if (!characterController.isGrounded) {
@@ -302,6 +273,5 @@ float targetZRotation = Input.GetAxis("Horizontal") < 0 ? -maxTiltAngle : maxTil
                 timer = 0;
             }
         }
-
     }
 }

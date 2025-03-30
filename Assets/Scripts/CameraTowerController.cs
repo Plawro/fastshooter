@@ -18,16 +18,15 @@ public class CameraTowerController : MonoBehaviour
     private float targetOffset = 0;  // Target offset for smooth transition
 
 
-    public PowerPlantController powerPlantController;
-    public StatsScreen statsScreen;
-    public Camera mainCamera;
+    [SerializeField] PowerPlantController powerPlantController;
+    [SerializeField] StatsScreen statsScreen;
+    [SerializeField] Camera mainCamera;
     float lookDistance = 10f;
 
     private bool isUsingVirtualCamera = false;
 
-    public LayerMask ignoreLayer;
-    public TextMeshProUGUI crosshair;
-    //public TextMeshProUGUI inventoryText;
+    [SerializeField] LayerMask ignoreLayer;
+    [SerializeField] TextMeshProUGUI crosshair;
     string crosshairText = " ";
 
     [SerializeField] Transform inventory;
@@ -65,12 +64,6 @@ public class CameraTowerController : MonoBehaviour
     void Update()
     {
         crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 30);
-        // Check for "look back" key (S)
-        //if (Input.GetKeyDown(KeyCode.S))
-        //{
-            //targetOffset = targetOffset == 0 ? 180 : 0; // Toggle between 0 and 180 degrees
-        //}
-
         // Get cursor position as a percentage of the screen
         Vector2 cursorPosition = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
 
@@ -89,8 +82,6 @@ public class CameraTowerController : MonoBehaviour
         virtualCamera.transform.localRotation = Quaternion.Euler(currentRotation.y, currentRotation.x, 0);
 
 
-        // KEYBOARD MODE
-        
         if(targetOffset == -180){
         if(nowInteractingWith == ""){
 
@@ -126,7 +117,6 @@ public class CameraTowerController : MonoBehaviour
             }
         }
 
-        // MOUSE MODE
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
@@ -140,12 +130,22 @@ public class CameraTowerController : MonoBehaviour
                     }
                     
                     if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>()){
+                        leftHand.GetChild(0).gameObject.layer = 0;
+                        foreach (Transform child in leftHand.GetChild(0).transform)
+                        {
+                            child.gameObject.layer = 0;
+                        }
                         leftHand.GetChild(0).transform.parent = hit.transform;
                         hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
                         hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, -90);
                     }
 
                     if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>()){
+                        rightHand.GetChild(0).gameObject.layer = 0;
+                        foreach (Transform child in rightHand.GetChild(0).transform)
+                        {
+                            child.gameObject.layer = 0;
+                        }
                         rightHand.GetChild(0).transform.parent = hit.transform;
                         hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
                         hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(90, 0, -90);
@@ -157,12 +157,14 @@ public class CameraTowerController : MonoBehaviour
                     }
                     
                     if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).transform.name == "Flash"){
+                        leftHand.GetChild(0).gameObject.layer = 0;
                         leftHand.GetChild(0).transform.parent = hit.transform;
                         hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
                         hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(-90, 0, 0);
                     }
 
                     if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).transform.name == "Flash"){
+                        rightHand.GetChild(0).gameObject.layer = 0;
                         rightHand.GetChild(0).transform.parent = hit.transform;
                         hit.transform.GetChild(0).transform.localPosition = new Vector3(0,0,0);
                         hit.transform.GetChild(0).transform.localRotation = Quaternion.Euler(-90, 0, 0);
@@ -226,6 +228,11 @@ public class CameraTowerController : MonoBehaviour
                 }
                 
                 if(Input.GetKeyDown(KeyCode.Mouse0) && leftHand.childCount > 0 && leftHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
+                    leftHand.GetChild(0).gameObject.layer = 0;
+                    foreach (Transform child in leftHand.GetChild(0).transform)
+                        {
+                            child.gameObject.layer = 0;
+                        }
                     leftHand.GetChild(0).transform.parent = hit.transform;
                     hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos; // First 2 children are model parts
                     hit.transform.GetChild(2).transform.localRotation = new Quaternion(0,0,0,0);
@@ -233,6 +240,11 @@ public class CameraTowerController : MonoBehaviour
                 }
 
                 if(Input.GetKeyDown(KeyCode.Mouse1) && rightHand.childCount > 0 && rightHand.GetChild(0).GetComponent<DataCapsule>() && GameController.Instance.DCuploader.CheckCapsule() == "Empty"){
+                    rightHand.GetChild(0).gameObject.layer = 0;
+                    foreach (Transform child in rightHand.GetChild(0).transform)
+                        {
+                            child.gameObject.layer = 0;
+                        }
                     rightHand.GetChild(0).transform.parent = hit.transform;
                     hit.transform.GetChild(2).transform.localPosition = hit.transform.GetComponent<DCUploaderController>().capsulePos;
                     hit.transform.GetChild(2).transform.localRotation = new Quaternion(0,0,0,0);
@@ -276,6 +288,11 @@ public class CameraTowerController : MonoBehaviour
 
     void PickupObject(Transform obj, Transform hand)
     {
+        obj.gameObject.layer = 17;
+        foreach (Transform child in obj.transform)
+        {
+            child.gameObject.layer = 17;
+        }
         obj.position = hand.position;
         obj.parent = hand;
         if(obj.transform.name == "Flash"){
@@ -283,16 +300,12 @@ public class CameraTowerController : MonoBehaviour
         }else{
             obj.localRotation = Quaternion.Euler(0, 180, 0);
         }
-        /*inventoryText.text = 
-        "Inventory:\n"+
-        (leftHand.childCount > 0 ? leftHand.GetChild(0).name : "Empty") + 
-        " | " + 
-        (rightHand.childCount > 0 ? rightHand.GetChild(0).name : "Empty");
-        */
 
+        statsScreen.ResetAll();
         if (obj.GetComponent<DataCapsule>() && obj.GetComponent<DataCapsule>().mode == 1)
         {
             obj.GetComponent<DataCapsule>().ChangeMode(3);
+
         }
     }
 
@@ -330,13 +343,11 @@ public class CameraTowerController : MonoBehaviour
         GameController.Instance.activeVirtualCamera = virtualCamera;
         GameController.Instance.activeVirtualCamera.gameObject.SetActive(true);
         isUsingVirtualCamera = false;
-       // mainCamera.transform.position = camPosSave;
         powerPlantController = null;
     }
 
     public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
-        //camPosSave = mainCamera.transform.position;
         if (GameController.Instance.activeVirtualCamera != null)
         {
             GameController.Instance.activeVirtualCamera.gameObject.SetActive(false);

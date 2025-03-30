@@ -6,17 +6,17 @@ using TMPro;
 [System.Serializable]
 public class MarkerData
 {
-    public Transform marker;     // Waypoint transform
-    public GameObject uiPrefab;  // Specific UI prefab for this waypoint
+    public Transform marker; // Waypoint transform
+    public GameObject uiPrefab; // Specific UI prefab for this waypoint
 }
 
 public class ControlWaypoints : MonoBehaviour
 {
-    public Camera mainCamera;                 // Assign the player's camera
-    public Canvas canvas;                     // Your canvas (set in Screen Space - Camera)
-    public List<MarkerData> markers;          // List of markers and their prefabs
-    public float parallaxStrength = 5f;       // Parallax effect strength
-    public float proximityThreshold = 1f;     // Distance threshold to change text
+    [SerializeField] Camera mainCamera;
+    [SerializeField] Canvas canvas;
+    [SerializeField] List<MarkerData> markers;
+    [SerializeField] float parallaxStrength = 5f;
+    [SerializeField] float proximityThreshold = 1f;
 
     private List<GameObject> uiElements = new List<GameObject>();
     private RectTransform canvasRect;

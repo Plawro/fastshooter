@@ -5,18 +5,18 @@ using UnityEngine;
 
 public class MainMenuEffect : MonoBehaviour
 {
-    public RectTransform uiElement;
-    public RectTransform uiElement2;
-    public float moveSpeed = 1f; // Adjust speed if needed
+    [SerializeField] RectTransform uiElement;
+    [SerializeField] RectTransform uiElement2;
+    [SerializeField] float moveSpeed = 1f;
     private Vector2 lastMousePos;
 
 
     bool isIntroActive = true;
-    public TextMeshProUGUI textDisplay; // Assign the TextMeshProUGUI
-    public CanvasGroup canvasGroup; // Assign the CanvasGroup for fading
-    public string[] introTexts; // Array of texts to display
-    public float textSpeed = 0.05f; // Speed of text writing
-    public float fadeDuration = 0.7f; // Time it takes to fade in
+    [SerializeField] TextMeshProUGUI textDisplay;
+    [SerializeField] CanvasGroup canvasGroup; // Assign the CanvasGroup for fading
+    [SerializeField] string[] introTexts; // Array of texts to display
+    [SerializeField] float textSpeed = 0.05f; // Speed of text writing
+    [SerializeField] float fadeDuration = 0.7f; // Time it takes to fade in
     private int currentTextIndex = 0;
     private bool isWriting = false;
     private bool textFullyDisplayed = false;

@@ -21,28 +21,7 @@ public class GameController : MonoBehaviour
     public bool vanLeft = false;
     public bool touchedVan = false;
     public bool vanHereAgain = false;
-    public bool introTextsOn = false;
-
-    public void RemoveTutorial(){
-        vanLeft = true;
-        tasks[0].color = Color.green;
-        canMove = false;
-        vanSource.Play();
-        StartCoroutine(FadeOut());
-        StartCoroutine(HideVan());
-    }
-
-    IEnumerator HideVan(){
-        yield return new WaitForSeconds(8);
-        van.SetActive(false);
-        foreach(GameObject text in tutorialTexts){
-            text.SetActive(false);
-        }
-        StartCoroutine(FadeIn());
-        canMove = true;
-        yield break;
-    }
-    
+    [SerializeField] bool introTextsOn = false;
 
     [Header("Generator stuff")]
     [SerializeField] public GameObject[] lights;
@@ -60,12 +39,12 @@ public class GameController : MonoBehaviour
     bool isOpen;
 
     [Header("Jumpscare related")]
-    public CinemachineVirtualCamera jumpscareCameraFollower;
+    [SerializeField] CinemachineVirtualCamera jumpscareCameraFollower;
     public CinemachineVirtualCamera jumpscareCameraDrift1;
-    public CinemachineVirtualCamera jumpscareCameraDrift2;
-    public CinemachineVirtualCamera jumpscareCameraSentinel;
-    public CinemachineVirtualCamera jumpscareCameraCargoMule;
-    public CinemachineBrain cameraBrain;
+    [SerializeField] CinemachineVirtualCamera jumpscareCameraDrift2;
+    [SerializeField] CinemachineVirtualCamera jumpscareCameraSentinel;
+    [SerializeField] CinemachineVirtualCamera jumpscareCameraCargoMule;
+    [SerializeField] CinemachineBrain cameraBrain;
     bool wasJumpscared = false;
     bool isSceneLoading = false;
     [SerializeField] GameObject playerLight;
@@ -98,23 +77,52 @@ public class GameController : MonoBehaviour
     [SerializeField] AudioClip lightsOn;
     [SerializeField] public AudioSource door;
     [SerializeField] public AudioClip doorSound;
+    [SerializeField] AudioClip easterEggSound;
+    bool isPlayingEasterEgg = false;
+    public CanvasGroup fadeCanvasGroup; // Fading image CanvasGroup
+    float fadeDuration = 0.2f;   // Duration of fade in/out for out/in
+    [SerializeField] AmbientController ambientController;
+    Coroutine ambientVictory;
 
     void Start(){ // Player must survive until 6:00 and also must do all the tasks until that time
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 120;
         van.SetActive(true); // On start tutorial, after tutorial, interact with it to make it go away and start the game
         canMove = true;
         timeMenu.anchoredPosition = hiddenPos;
         isOpen = false;
         timeMenu.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "20:00";
         gameTime = 20 * 60;
+        Time.timeScale = 1;
         StartCoroutine(ClockCoroutine());
     }
+
+    
+    public void RemoveTutorial(){
+        vanLeft = true;
+        tasks[0].color = Color.green;
+        canMove = false;
+        vanSource.Play();
+        StartCoroutine(FadeOut());
+        StartCoroutine(HideVan());
+    }
+
+    IEnumerator HideVan(){
+        yield return new WaitForSeconds(8);
+        van.SetActive(false);
+        foreach(GameObject text in tutorialTexts){
+            text.SetActive(false);
+        }
+        StartCoroutine(FadeIn());
+        canMove = true;
+        yield break;
+    }
+    
 
     string LeadingZero (int n){
      return n.ToString().PadLeft(2, '0');
     }
 
-    [SerializeField] AmbientController ambientController;
-    Coroutine ambientVictory;
     private IEnumerator ClockCoroutine()
     {
         while (true)
@@ -138,16 +146,16 @@ public class GameController : MonoBehaviour
                         if(ambientVictory == null){
                             GameController.Instance.van.SetActive(true);
                             GameController.Instance.vanHereAgain = true;
-                            ambientVictory = StartCoroutine(ambientController.VanIsHere()); // V 6:00 se spusti
+                            ambientVictory = StartCoroutine(ambientController.VanIsHere()); // 6:00 starts
                         }
                     yield break; // Stop the coroutine when the event happens
                 }
 
-                yield return new WaitForSeconds(45f); // 45s = +30mins -> 15 minutes until 6:00
+                yield return new WaitForSeconds(33f); // 33s = +30mins -> 10 minutes until 6:00
 
                 gameTime += 30; // Increase time in 10-minute steps
 
-                // Ensure time wraps around at midnight (24:00 → 00:00)
+                // Ensure time wraps around at midnight
                 if (gameTime >= 24 * 60)
                     gameTime = 0;
             }
@@ -159,7 +167,16 @@ public class GameController : MonoBehaviour
     }
 
     void Update(){
-        if (Input.GetKey(KeyCode.Tab)) // Change key if needed
+        if(Input.GetKey(KeyCode.LeftShift)){
+            if(Input.GetKey(KeyCode.LeftControl)){
+                if(Input.GetKey(KeyCode.LeftAlt)){
+                    if(Input.GetKey(KeyCode.Space) && !isPlayingEasterEgg){
+                        isPlayingEasterEgg = true;
+                        door.PlayOneShot(easterEggSound);
+                    }}}
+        }
+
+        if (Input.GetKey(KeyCode.Tab))
         {
             isOpen = true;
         }
@@ -309,10 +326,10 @@ public class GameController : MonoBehaviour
     activeVirtualCamera.transform.parent.gameObject.SetActive(true);
 
     // Attach inventory to camera and position/rotate relative to it
-        inventory.transform.SetParent(activeVirtualCamera.transform);
-        inventory.transform.localPosition = inventoryOffset; // Local offset
-        inventory.transform.localRotation = Quaternion.Euler(0, 180, 0); // Reset with specific rotation
-        inventory.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+    inventory.transform.SetParent(activeVirtualCamera.transform);
+    inventory.transform.localPosition = inventoryOffset; // Local offset
+    inventory.transform.localRotation = Quaternion.Euler(0, 180, 0); // Reset with specific rotation
+    inventory.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
 
     yield return null;
     yield return new WaitForSeconds(1f);
@@ -322,6 +339,10 @@ public class GameController : MonoBehaviour
     public void SwitchModeHallway(bool fadeOut, bool playDoorSound)
     {
         StartCoroutine(SwitchModeHallwayCoroutine(fadeOut, playDoorSound));
+    }
+
+    public void PlaySound(AudioClip clip){
+        door.PlayOneShot(clip);
     }
 
 
@@ -341,10 +362,10 @@ public class GameController : MonoBehaviour
     mainDoorCont.ChangeDoorMode(false);
 
     // Attach inventory to camera and position/rotate relative to it
-        inventory.transform.SetParent(activeVirtualCamera.transform);
-        inventory.transform.localPosition = inventoryOffset; // Local offset
-        inventory.transform.localRotation = Quaternion.Euler(0, 180, 0); // Reset with specific rotation
-        inventory.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+    inventory.transform.SetParent(activeVirtualCamera.transform);
+    inventory.transform.localPosition = inventoryOffset; // Local offset
+    inventory.transform.localRotation = Quaternion.Euler(0, 180, 0); // Reset with specific rotation
+    inventory.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
 
 
     Cursor.lockState = CursorLockMode.None;
@@ -391,11 +412,12 @@ public class GameController : MonoBehaviour
         inventory.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
 
         Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-            crosshair.enabled = false;
-            door.PlayOneShot(doorSound);
-    yield return new WaitForSeconds(0.5f);
-    yield return StartCoroutine(FadeIn());
+        Cursor.visible = true;
+        crosshair.enabled = false;
+        door.PlayOneShot(doorSound);
+        
+        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(FadeIn());
     }
 
     public void SwitchModePowerPlant()
@@ -462,16 +484,13 @@ public class GameController : MonoBehaviour
         inventory.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
     
         Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            crosshair.enabled = true;
-            ambient.SetOutside();
-    yield return new WaitForSeconds(0.5f);
-    yield return StartCoroutine(FadeIn());
+        Cursor.visible = false;
+        crosshair.enabled = true;
+        ambient.SetOutside();
+
+        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(FadeIn());
     }
-
-
-    public CanvasGroup fadeCanvasGroup; // Fading image CanvasGroup
-    float fadeDuration = 0.2f;   // Duration of fade in/out for out/in
 
     public IEnumerator FadeOut()
     {
@@ -538,7 +557,7 @@ public class GameController : MonoBehaviour
             StartCoroutine(EndJumpscare("Drift")); 
         }else if(enemyName == "Sentinel" && !wasJumpscared){
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
-            playerInteractions.SwitchToVirtualCamera(jumpscareCameraSentinel); // ALSO GO CLOSER LIKE A PROPER JUMPSCARE
+            playerInteractions.SwitchToVirtualCamera(jumpscareCameraSentinel);
             playerInteractions.SaveLastKnownCameraPos();
             StartCoroutine(playerInteractions.ShakeCamera(0.02f));
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;
@@ -546,7 +565,7 @@ public class GameController : MonoBehaviour
             StartCoroutine(EndJumpscare("Sentinel")); 
         }else if(enemyName == "CargoMule" && !wasJumpscared){
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.Cut;
-            playerInteractions.SwitchToVirtualCamera(jumpscareCameraCargoMule); // ALSO GO CLOSER LIKE A PROPER JUMPSCARE
+            playerInteractions.SwitchToVirtualCamera(jumpscareCameraCargoMule);
             playerInteractions.SaveLastKnownCameraPos();
             StartCoroutine(playerInteractions.ShakeCamera(0.02f));
             cameraBrain.m_DefaultBlend.m_Style = CinemachineBlendDefinition.Style.EaseInOut;

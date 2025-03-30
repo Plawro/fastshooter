@@ -7,22 +7,30 @@ using System.Diagnostics;
 
 public class StatsScreen : MonoBehaviour
 {  
-    public GameObject playerObject;
-    public GameObject cameraStatsScreen;
-     public Image[] progressBarImages; // Array of 26 images representing the progress bar
-    public TextMeshProUGUI dataPackCountText;
-    public TextMeshProUGUI countdownText; // Antenna warning text
-    public LockingDisplay squareScreenController;
-    public TowerController towerController;
+    [SerializeField] GameObject playerObject;
+    [SerializeField] GameObject cameraStatsScreen;
+    [SerializeField] Image[] progressBarImages; // Array of 26 images representing the progress bar
+    [SerializeField] TextMeshProUGUI dataPackCountText;
+    [SerializeField] TextMeshProUGUI countdownText; // Antenna warning text
+    [SerializeField] LockingDisplay squareScreenController;
+    [SerializeField] TowerController towerController;
 
     private int dataPackCount = 0;
     private bool isTransferringData = false;
     private Coroutine dataTransferCoroutine = null;
     private Coroutine countdownCoroutine = null;
-    public AudioSource audioSource;
+    [SerializeField] AudioSource audioSource;
     float progress = 0;
     [SerializeField] AudioClip broken;
     [SerializeField] AudioClip minigameSuccess;
+    [SerializeField] Transform arrow;
+    int moveDir;
+    Coroutine finishedArrow;
+    [SerializeField] Transform boostImage;
+    string textValue;
+    int size;
+    int boostPower;
+    int numberOfImages;
 
     private void Start()
     {
@@ -32,16 +40,6 @@ public class StatsScreen : MonoBehaviour
         boostImage.parent.transform.gameObject.SetActive(false);
         numberOfImages = progressBarImages.Length;
     }
-
-
-    [SerializeField] Transform arrow;
-    int moveDir;
-    Coroutine finishedArrow;
-    [SerializeField] Transform boostImage;
-    string textValue;
-    int size;
-    int boostPower;
-    int numberOfImages;
 
     void Update()
     {
@@ -70,7 +68,7 @@ public class StatsScreen : MonoBehaviour
             moveDir = -10;
         }
 
-        arrow.transform.localPosition = new Vector2(arrow.transform.localPosition.x+moveDir, 141f);
+        arrow.transform.localPosition = new Vector2(arrow.transform.localPosition.x+moveDir*Time.deltaTime*100, 141f);
     }
 
     IEnumerator StopArrow(){
@@ -133,7 +131,7 @@ public class StatsScreen : MonoBehaviour
                 yield break; // Exit if antenna is broken
             }
 
-            progress += Time.deltaTime / transferDuration + boostPower * 0.02f;
+            progress += Time.deltaTime * 28 / transferDuration + boostPower * 0.02f;
             boostPower = 0;
             
             int currentIndex = Mathf.FloorToInt(progress * numberOfImages);
@@ -143,9 +141,9 @@ public class StatsScreen : MonoBehaviour
                 ResetProgressBar();
                 progress = 0;
                 squareScreenController.StartSearching();
-                //Set color to red
             }
             UpdateProgressBar(currentIndex);
+            yield return new WaitForSeconds(0.5f);
             yield return null;
         }
 
@@ -171,14 +169,6 @@ public class StatsScreen : MonoBehaviour
 
         while (countdown > 0)
         {
-            /*if (Input.GetKeyDown(KeyCode.P))
-            {
-                countdownText.gameObject.SetActive(false);
-                towerController.isAntennaBroken = false;
-                dataTransferCoroutine = StartCoroutine(DataTransferProgress()); // Resume data transfer
-                yield break;
-            }*/
-
             yield return new WaitForSeconds(1f);
             countdown--;
             countdownText.text = $"Antenna broken! Time till signal lose: {countdown}";
@@ -229,6 +219,15 @@ public class StatsScreen : MonoBehaviour
         squareScreenController.StartSearching();
     }
 
+    public void ResetAll()
+    {
+        isTransferringData = false;
+        ResetProgressBar();
+        progress = 0;
+        squareScreenController.StartSearching();
+        squareScreenController.newTarget = null;
+    }
+
     private void ResetProgress()
     {
         progress = 0;
@@ -264,7 +263,7 @@ public class StatsScreen : MonoBehaviour
             currentIndex = (currentIndex + 1) % totalImages;
             yield return new WaitForSeconds(0.1f); // Adjust for blinking speed
         }
-
+        
         // Reset all images when not searching
         ResetProgressBar();
     }

@@ -17,27 +17,25 @@ public class CameraHallwayController : MonoBehaviour
     private float rotationOffset = 0; // Offset for "looking back"
     private float targetOffset = 0;  // Target offset for smooth transition
 
-
-    public Camera mainCamera;
-    public float lookDistance = 5f;
+    [SerializeField] Camera mainCamera;
+    [SerializeField] float lookDistance = 5f;
 
     private bool isUsingVirtualCamera = false;
 
-    public LayerMask ignoreLayer;
-    public TextMeshProUGUI crosshair;
-    //public TextMeshProUGUI inventoryText;
+    [SerializeField] LayerMask ignoreLayer;
+    [SerializeField] TextMeshProUGUI crosshair;
     string crosshairText = " ";
 
     [SerializeField] Transform inventory;
     [SerializeField] Transform leftHand;
     [SerializeField] Transform rightHand;
 
-    public string nowInteractingWith = "";
+    [SerializeField] string nowInteractingWith = "";
 
 
     [SerializeField] CinemachineVirtualCamera controlPanelCam;
 
-    void OnEnable(){ // Just to make sure we are rotated correctly after getting back (not last-know-rotation) :>
+    void OnEnable(){ // Just to make sure we are rotated correctly after getting back (not last-known-rotation) :>
         targetOffset = -90;
     }
 
@@ -62,12 +60,6 @@ public class CameraHallwayController : MonoBehaviour
     void Update()
     {
         crosshair.transform.position = new Vector2(Input.mousePosition.x + 200,Input.mousePosition.y - 50);
-        // Check for "look back" key (S)
-        //if (Input.GetKeyDown(KeyCode.S))
-        //{
-            //targetOffset = targetOffset == 0 ? 180 : 0; // Toggle between 0 and 180 degrees
-        //}
-
         // Get cursor position as a percentage of the screen
         Vector2 cursorPosition = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
 
@@ -85,8 +77,6 @@ public class CameraHallwayController : MonoBehaviour
         // Apply rotation to the camera
         virtualCamera.transform.localRotation = Quaternion.Euler(currentRotation.y, currentRotation.x, 0);
 
-        // KEYBOARD MODE
-        
         if(targetOffset == -90){
         if(nowInteractingWith == ""){
 
@@ -133,7 +123,6 @@ public class CameraHallwayController : MonoBehaviour
             }
         }
 
-        // MOUSE MODE
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
@@ -163,12 +152,10 @@ public class CameraHallwayController : MonoBehaviour
         GameController.Instance.activeVirtualCamera = virtualCamera;
         GameController.Instance.activeVirtualCamera.gameObject.SetActive(true);
         isUsingVirtualCamera = false;
-       // mainCamera.transform.position = camPosSave;
     }
 
     public void SwitchToVirtualCamera(CinemachineVirtualCamera vCam)
     {
-        //camPosSave = mainCamera.transform.position;
         if (GameController.Instance.activeVirtualCamera != null)
         {
             GameController.Instance.activeVirtualCamera.gameObject.SetActive(false);

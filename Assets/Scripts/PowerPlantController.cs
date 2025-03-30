@@ -5,23 +5,23 @@ using UnityEngine.UI;
 
 public class PowerPlantController : MonoBehaviour
 {
-    public GameObject playerObject;
-    public float minPower;
-    public float maxPower;
+    [SerializeField] GameObject playerObject;
+    [SerializeField] float minPower;
+    [SerializeField] float maxPower;
     // -60 & 60
 
-    public float addedPower;
-    public float decreasedPower;
-    public float power;
-    public GameObject arrow;
+    [SerializeField] float addedPower;
+    [SerializeField] float decreasedPower;
+    [SerializeField] float power;
+    [SerializeField] GameObject arrow;
 
-    public AudioClip sound1;
-    public AudioClip sound2;
-    public AudioClip sound3;
+    [SerializeField] AudioClip sound1;
+    [SerializeField] AudioClip sound2;
+    [SerializeField] AudioClip sound3;
 
-    public AudioSource audioSource;
+    [SerializeField] AudioSource audioSource;
 
-    public Transform skullImage;
+    [SerializeField] Transform skullImage;
     private Coroutine blinkCoroutine;
     private bool isBlinking = true;
 
@@ -29,10 +29,10 @@ public class PowerPlantController : MonoBehaviour
     bool isInDeadZone = false;
 
     private Coroutine rotateCoroutine;
-    public float heat;
+    [SerializeField] float heat;
     float maxHeat = 100;
-    public FollowerController enemyCont;
-    public RawImage[] progressBarImages;
+    [SerializeField] FollowerController enemyCont;
+    [SerializeField] RawImage[] progressBarImages;
     float heatBarAmmount;
     bool enabledBar = false;
     [SerializeField] AudioSource audioSource1;
@@ -72,15 +72,7 @@ public class PowerPlantController : MonoBehaviour
         audioSource1.Play();
     }
 
-
-    /*public void AddPower(float amount)
-    {
-        if(power < 170){
-           power += amount;
-        }
-    }*/
-
-    void Update()
+    void FixedUpdate()
     {   
         if(!GameController.Instance.IsGamePaused() && GameController.Instance.gameStarted){
         enemyCont.Charge((power+60)/2400);
@@ -88,12 +80,12 @@ public class PowerPlantController : MonoBehaviour
             if(power > 0){
                 heat += (power+60)/30000;
             }else if (heat >= 0){
-                heat -= 0.001f;
+                heat -= 0.002f;
             }
         }
 
          if(!isInDeadZone && !GameController.Instance.IsGamePaused() && GameController.Instance.gameStarted){
-            power -= 0.003f;
+            power -= Mathf.Clamp(0.006f, 0f, 0.006f);
             arrow.transform.eulerAngles = new Vector3(
                 arrow.transform.eulerAngles.x,
                 arrow.transform.eulerAngles.y,
@@ -141,7 +133,7 @@ public class PowerPlantController : MonoBehaviour
                 isInWarningZone = false;
                 StartCoroutine(GameController.Instance.EndGameExplosion());
             }
-        }else if(power <= -60.5f){ //nuclear reactor fell asleep - yeah, you can't restart it (such a skill issue)
+        }else if(power <= -60.5f){ // Nuclear reactor fell asleep - yeah, you can't restart it (such a skill issue)
             power = 0;
             audioSource.clip = sound3;
             audioSource.Play();
@@ -150,7 +142,7 @@ public class PowerPlantController : MonoBehaviour
             isInWarningZone = false;
             audioSource1.Stop();
             GameController.Instance.KillGenerator();
-            GameController.Instance.SwitchAllLights(false); //Also turn all electricity off
+            GameController.Instance.SwitchAllLights(false); // Also turn all electricity off
             if (audioSource.isPlaying && audioSource.clip == sound1)
             {
                 audioSource.Stop();
@@ -165,7 +157,7 @@ public class PowerPlantController : MonoBehaviour
             isInDeadZone = false;
             isInWarningZone = false;
             GameController.Instance.ReviveGenerator();
-            GameController.Instance.SwitchAllLights(true); //Also turn all electricity off
+            GameController.Instance.SwitchAllLights(true); // Also turn all electricity off
             if (audioSource.isPlaying && audioSource.clip == sound3)
             {
                 audioSource.Stop();
@@ -175,10 +167,10 @@ public class PowerPlantController : MonoBehaviour
     public void AddPower(float ammount){
         if(!isInDeadZone && !GameController.Instance.IsGamePaused()){
         if(ammount == 1){
-            power += 0.03f + Mathf.Clamp((power + 60) * 0.001f, 0, 1f);
+            power += 0.075f + Mathf.Clamp((power + 60) * 0.001f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);
         }else if(ammount == -1){
-            power -= 0.05f + Mathf.Clamp((power + 60) * 0.002f, 0, 1f);
+            power -= 0.075f + Mathf.Clamp((power + 60) * 0.002f, 0, 1f);
             power = Mathf.Clamp(power, minPower, maxPower);
         }
         }
@@ -187,10 +179,10 @@ public class PowerPlantController : MonoBehaviour
 
     private IEnumerator RotateArrowToTarget(float targetZ)
     {
-        Quaternion startRotation = arrow.transform.rotation; //here we are
+        Quaternion startRotation = arrow.transform.rotation; // Here we are
         Quaternion targetRotation = Quaternion.Euler(arrow.transform.eulerAngles.x, arrow.transform.eulerAngles.y, targetZ);
 
-        float duration = 2.0f; //make it longer, so it looks more "dramatic"
+        float duration = 2.0f; // Make it longer, so it looks more "dramatic"
         float elapsed = 0f;
 
         while (elapsed < duration)

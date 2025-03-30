@@ -6,9 +6,9 @@ using UnityEngine;
 public class DoorController : MonoBehaviour
 {
     public bool isOpen;
-    public bool isDoubleSlidingDoor;
-    public bool openAutomatically;
-    public float normalDoorOpenAngle = 90f;
+    [SerializeField] bool isDoubleSlidingDoor;
+    [SerializeField] bool openAutomatically;
+    [SerializeField] float normalDoorOpenAngle = 90f;
     private float currentAngle = 0f;
     private bool isPartiallyOpen = false;
 
@@ -70,10 +70,13 @@ public class DoorController : MonoBehaviour
 
     public IEnumerator OpenCloseDoor()
     {
-        yield return StartCoroutine(RotateDoorOpen());  // Wait until OpenDoor() finishes
-        GameController.Instance.door.PlayOneShot(GameController.Instance.doorSound);
+        StartCoroutine(RotateDoorOpen());  // Wait until OpenDoor() finishes
+        yield return new WaitForSeconds(1);
+        if(!GameController.Instance.playerObject.gameObject.activeSelf){
+            GameController.Instance.door.PlayOneShot(GameController.Instance.doorSound);
+        }
         print("playing");
-        yield return StartCoroutine(RotateDoorClose()); // Then start CloseDoor()
+        StartCoroutine(RotateDoorClose()); // Then start CloseDoor()
         yield break;
     }
     
@@ -195,6 +198,5 @@ public class DoorController : MonoBehaviour
                 CloseDoor();
             }
         }
-
     }
 }
